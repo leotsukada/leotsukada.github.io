@@ -7,6 +7,8 @@ delete_watermark: index.html.bk
 	$(eval LINE := $(shell grep mobirise index.html -n | tail -n 1 |  cut -f1 -d:))
 	sed -i -e '$(LINE)s@style=\"@style=\"display:none;@g' index.html
 
+smaller_logo:index.html.bk 
+sed -i -e "s@3.8rem@3.0rem@g" index.html
 index.html.bk:
 	cp index.html $@
 
