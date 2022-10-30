@@ -8,7 +8,7 @@ delete_watermark: index.html.bk
 	sed -i -e '$(LINE)s@style=\"@style=\"display:none;@g' index.html
 
 smaller_logo:index.html.bk 
-sed -i -e "s@3.8rem@3.0rem@g" index.html
+	sed -i -e "s@3.8rem@3.0rem@g" index.html
 index.html.bk:
 	cp index.html $@
 
