@@ -12,7 +12,7 @@ smaller_logo:index.html.bk
 
 add_image_credit: index.html.bk
 	$(eval LINEOLD := $(shell grep cid-tl7xZDjpSV index.html -n |  cut -f1 -d:))
-	$(eval LINE := $(shell echo $$(($(LINEOLD)-3))))
+	$(eval LINE := $(shell echo $$(($(LINEOLD)-5))))
 	sed -i -e '$(LINE)r image_credit.txt' index.html
 
 index.html.bk:
