@@ -12,6 +12,23 @@
   --accent: #40b0bf;
   --line: #e6e6e6;
 
+  /* Colors adjustable in the editor (Colors panel). The editor writes
+     overrides into a <style id="theme"> block in each page's <head>. */
+  --nav-bg: #ffffff;
+  --nav-link: var(--ink);
+  --nav-link-hover: var(--accent);
+  --social-color: var(--ink);
+  --social-hover: var(--accent);
+  --hero-name: var(--paper);
+  --hero-tagline: var(--paper);
+  --hero-line: var(--hero-name);
+  --hero-credit: var(--paper);
+  --news-title: var(--paper);
+  --about-title: var(--ink);
+  --about-text: var(--ink);
+  --contact-title: var(--paper);
+  --footer-text: #bdbdbd;
+
   --font-display: "Oswald", "Arial Narrow", system-ui, sans-serif;
   --font-body: "Inter", system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
 
@@ -120,7 +137,7 @@ h1, h2, h3, h4 {
   position: fixed;
   inset: 0 0 auto 0;
   z-index: 1000;
-  background: rgb(255 255 255 / .82);
+  background: color-mix(in srgb, var(--nav-bg) 82%, transparent);
   backdrop-filter: saturate(160%) blur(12px);
   -webkit-backdrop-filter: saturate(160%) blur(12px);
   border-bottom: 1px solid transparent;
@@ -153,7 +170,7 @@ h1, h2, h3, h4 {
   display: block;
   height: 2px;
   margin: 5px 0;
-  background: var(--ink);
+  background: var(--nav-link);
   border-radius: 2px;
   transition: transform .25s, opacity .25s;
 }
@@ -185,7 +202,7 @@ h1, h2, h3, h4 {
   font-family: var(--font-display);
   font-size: 1.1rem;
   font-weight: 400;
-  color: var(--ink);
+  color: var(--nav-link);
   text-decoration: none;
   background: none;
   border: 0;
@@ -194,7 +211,7 @@ h1, h2, h3, h4 {
   transition: color .2s;
 }
 .nav__link:hover,
-.nav__link[aria-current="page"] { color: var(--accent); }
+.nav__link[aria-current="page"] { color: var(--nav-link-hover); }
 
 .nav__dropdown { position: relative; }
 .nav__dropdown .chevron { width: .8em; height: .8em; transition: transform .2s; }
@@ -208,7 +225,7 @@ h1, h2, h3, h4 {
   margin: 0;
   padding: .5rem;
   list-style: none;
-  background: var(--white);
+  background: var(--nav-bg);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
@@ -219,11 +236,11 @@ h1, h2, h3, h4 {
   gap: .5em;
   padding: .5rem .75rem;
   font-family: var(--font-display);
-  color: var(--ink);
+  color: var(--nav-link);
   text-decoration: none;
   border-radius: 6px;
 }
-.nav__submenu a:hover { background: var(--paper); color: var(--accent); }
+.nav__submenu a:hover { background: color-mix(in srgb, var(--nav-link) 6%, transparent); color: var(--nav-link-hover); }
 
 .nav__social {
   display: flex;
@@ -233,11 +250,11 @@ h1, h2, h3, h4 {
   display: grid;
   place-items: center;
   width: 36px; height: 36px;
-  color: var(--ink);
+  color: var(--icon-color, var(--social-color));
   border-radius: 50%;
   transition: color .2s, background-color .2s;
 }
-.nav__social a:hover { color: var(--accent); background: rgb(0 0 0 / .04); }
+.nav__social a:hover { color: var(--social-hover); background: color-mix(in srgb, var(--nav-link) 6%, transparent); }
 .nav__social .icon { width: 18px; height: 18px; }
 
 @media (max-width: 991px) {
@@ -251,7 +268,7 @@ h1, h2, h3, h4 {
     align-items: stretch;
     gap: 1rem;
     padding: 1rem var(--gutter) 1.5rem;
-    background: var(--white);
+    background: var(--nav-bg);
     border-bottom: 1px solid var(--line);
     box-shadow: 0 12px 24px rgb(0 0 0 / .08);
     max-height: calc(100dvh - var(--nav-h));
@@ -266,7 +283,7 @@ h1, h2, h3, h4 {
     position: static;
     border: 0;
     box-shadow: none;
-    background: var(--paper);
+    background: color-mix(in srgb, var(--nav-link) 4%, var(--nav-bg));
     text-align: center;
   }
   .nav__submenu a { justify-content: center; }
@@ -283,15 +300,17 @@ h1, h2, h3, h4 {
   min-height: min(92vh, 900px);
   padding-top: var(--nav-h);
   color: var(--paper);
-  background:
-    linear-gradient(90deg, rgb(0 0 0 / .55), rgb(0 0 0 / .1) 70%),
-    url("../images/gravwave-2-2000x1500.jpg") center / cover no-repeat;
+  /* background-image is set inline from the editor's hero image */
   background-color: #0b0b1a;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
 }
 
 .hero__title {
   font-size: clamp(3rem, 9vw, 4.6rem);
   font-weight: 700;
+  color: var(--hero-name);
 }
 .hero__title::after {
   content: "";
@@ -299,7 +318,7 @@ h1, h2, h3, h4 {
   width: min(530px, 80%);
   height: 4px;
   margin-top: 1rem;
-  background: currentColor;
+  background: var(--hero-line);
   border-radius: 2px;
   opacity: .9;
 }
@@ -309,6 +328,7 @@ h1, h2, h3, h4 {
   font-family: var(--font-display);
   font-size: clamp(1.4rem, 3.5vw, 2.2rem);
   font-weight: 300;
+  color: var(--hero-tagline);
 }
 
 .hero__credit {
@@ -317,6 +337,7 @@ h1, h2, h3, h4 {
   bottom: .75rem;
   margin: 0;
   font-size: .75rem;
+  color: var(--hero-credit);
   opacity: .7;
 }
 
@@ -325,13 +346,35 @@ h1, h2, h3, h4 {
   .hero__title::after { margin-inline: auto; }
 }
 
+/* Custom text positions set in the editor (hero--free). Phones keep the
+   automatic centered layout so nothing runs off a small screen. */
+@media (min-width: 768px) {
+  .hero--free .hero__obj {
+    position: absolute;
+    left: var(--x, 10%);
+    top: var(--y, 50%);
+    right: auto;
+    bottom: auto;
+    width: max-content;
+    max-width: 92%;
+    margin: 0;
+    text-align: left;
+    transform: translate(0, -50%);
+  }
+  .hero--free .hero__obj[data-align="center"] { text-align: center; transform: translate(-50%, -50%); }
+  .hero--free .hero__obj[data-align="right"] { text-align: right; transform: translate(-100%, -50%); }
+
+  .hero--free .hero__title { min-width: min(530px, 60vw); }
+  .hero--free .hero__title::after { width: 100%; margin-inline: 0; }
+}
+
 /* ---------- News carousel ---------- */
 .news {
   padding-block: 6rem 4rem;
   color: var(--paper);
   background: var(--dark);
 }
-.news .section-title { text-align: center; }
+.news .section-title { text-align: center; color: var(--news-title); }
 
 .carousel { position: relative; }
 
@@ -439,14 +482,15 @@ h1, h2, h3, h4 {
   .about__photo { max-width: 360px; margin-inline: auto; }
 }
 
-.about__text p { margin: 0 0 1.25rem; font-size: 1.05rem; }
+.about__text .section-title { color: var(--about-title); }
+.about__text p { margin: 0 0 1.25rem; font-size: 1.05rem; color: var(--about-text); }
 .about__text a {
   color: var(--accent);
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
 }
-.about__text a:hover { color: var(--ink); }
+.about__text a:hover { color: var(--about-text); }
 
 .about__photo img {
   width: 100%;
@@ -461,7 +505,7 @@ h1, h2, h3, h4 {
   color: var(--paper);
   background: var(--dark);
 }
-.contact .section-title { text-align: center; margin-bottom: 2rem; }
+.contact .section-title { text-align: center; margin-bottom: 2rem; color: var(--contact-title); }
 
 .contact__grid {
   display: grid;
@@ -507,7 +551,7 @@ h1, h2, h3, h4 {
   padding-block: 1.75rem;
   font-size: .9rem;
   text-align: center;
-  color: #bdbdbd;
+  color: var(--footer-text);
   background: var(--dark);
   border-top: 1px solid rgb(255 255 255 / .08);
 }
