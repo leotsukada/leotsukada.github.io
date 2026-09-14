@@ -1,0 +1,1540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Website Editor</title>
+<link rel="icon" href="/assets/images/lt-logo-1-124x121.png">
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --panel: #ffffff;
+    --ink: #1d2126;
+    --ink-2: #545b64;
+    --muted: #8a919a;
+    --line: #e3e6ea;
+    --line-2: #d3d8de;
+    --accent: #1f7f8c;
+    --accent-2: #40b0bf;
+    --accent-soft: #e6f4f6;
+    --danger: #c43c3c;
+    --warn: #b7791f;
+    --ok: #2f855a;
+    --radius: 8px;
+    --shadow: 0 1px 2px rgb(0 0 0 / .05), 0 4px 16px rgb(0 0 0 / .06);
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", "Hiragino Sans", sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { display: grid; grid-template-rows: 56px 1fr; background: var(--bg); overflow: hidden; }
+  button, input, textarea, select { font: inherit; color: inherit; }
+  [hidden] { display: none !important; }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 16px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; }
+  .brand img { width: 28px; height: 28px; border-radius: 6px; }
+  .status { display: inline-flex; align-items: center; gap: 6px; margin-left: 8px; color: var(--muted); font-size: 13px; }
+  .status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+  .status.dirty::before { background: var(--warn); }
+  .status.busy::before { background: var(--accent-2); animation: pulse 1s infinite; }
+  @keyframes pulse { 50% { opacity: .3; } }
+  .spacer { flex: 1; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    height: 34px; padding: 0 14px;
+    background: var(--panel); border: 1px solid var(--line-2); border-radius: 7px;
+    font-weight: 500; cursor: pointer; white-space: nowrap;
+    transition: background-color .15s, border-color .15s;
+  }
+  a.btn { text-decoration: none; color: inherit; }
+  .btn:hover { background: #f7f8fa; border-color: #c2c8cf; }
+  .btn:disabled { opacity: .45; cursor: default; }
+  .btn--primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn--primary:hover { background: #196b76; border-color: #196b76; }
+  .btn--danger { color: var(--danger); }
+  .btn--danger:hover { background: #fdf2f2; border-color: #efc2c2; }
+  .btn--ghost { background: transparent; border-color: transparent; }
+  .btn--ghost:hover { background: #eef0f3; border-color: transparent; }
+  .btn--sm { height: 28px; padding: 0 10px; font-size: 13px; }
+  .btn--icon { width: 30px; padding: 0; height: 30px; }
+  .kbd { font-size: 11px; color: inherit; opacity: .7; }
+  svg.i { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+  /* ---------- Layout ---------- */
+  .layout { display: grid; grid-template-columns: 210px minmax(380px, 560px) 1fr; min-height: 0; }
+  .layout.no-preview { grid-template-columns: 210px 1fr; }
+  .layout.no-preview .preview { display: none; }
+
+  .sidebar { padding: 14px 10px; border-right: 1px solid var(--line); background: var(--panel); overflow-y: auto; }
+  .sidebar h2 { margin: 6px 10px 8px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .navbtn {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    padding: 8px 10px; margin-bottom: 2px;
+    background: none; border: 0; border-radius: 7px; text-align: left; cursor: pointer; color: var(--ink-2);
+  }
+  .navbtn:hover { background: #f1f3f5; color: var(--ink); }
+  .navbtn.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .navbtn .count { margin-left: auto; font-size: 12px; color: var(--muted); font-weight: 400; }
+  .sidebar .help { margin: 18px 10px 0; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; line-height: 1.55; }
+  .sidebar .help b { color: var(--ink-2); font-weight: 600; }
+
+  .editor { overflow-y: auto; padding: 22px 24px 80px; border-right: 1px solid var(--line); }
+  .layout.no-preview .editor { max-width: 760px; width: 100%; margin: 0 auto; border-right: 0; }
+  .panel-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
+  .panel-head h1 { margin: 0; font-size: 20px; }
+  .panel-head p { margin: 4px 0 0; color: var(--muted); }
+  .panel-head .actions { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; }
+  .card > h3 { margin: 0 0 12px; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+
+  /* ---------- Fields ---------- */
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  .field > label, .field > .label { display: block; margin-bottom: 5px; font-weight: 500; font-size: 13px; color: var(--ink-2); }
+  .hint { margin-top: 4px; font-size: 12px; color: var(--muted); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .input, .rich {
+    width: 100%; padding: 8px 10px;
+    background: #fff; border: 1px solid var(--line-2); border-radius: 7px;
+    outline: none; transition: border-color .15s, box-shadow .15s;
+  }
+  input.input { height: 36px; }
+  textarea.input { resize: vertical; min-height: 70px; line-height: 1.5; }
+  .input:focus, .rich:focus-within { border-color: var(--accent-2); box-shadow: 0 0 0 3px rgb(64 176 191 / .18); }
+  .input.invalid { border-color: #e0a3a3; }
+
+  .rich { padding: 0; }
+  .rich__bar { display: flex; gap: 2px; padding: 4px; border-bottom: 1px solid var(--line); background: #fafbfc; border-radius: 7px 7px 0 0; }
+  .rich__bar button { height: 26px; min-width: 28px; padding: 0 7px; background: none; border: 0; border-radius: 5px; cursor: pointer; color: var(--ink-2); }
+  .rich__bar button:hover { background: #e9ecef; color: var(--ink); }
+  .rich__area { min-height: 80px; padding: 9px 11px; outline: none; line-height: 1.55; }
+  .rich__area.block { min-height: 220px; }
+  .rich__area p { margin: 0 0 .8em; }
+  .rich__area a { color: var(--accent); }
+
+  .switch { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+  .switch input { appearance: none; width: 32px; height: 18px; margin: 0; background: #cfd5db; border-radius: 99px; position: relative; cursor: pointer; transition: background .15s; }
+  .switch input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: transform .15s; }
+  .switch input:checked { background: var(--accent); }
+  .switch input:checked::after { transform: translateX(14px); }
+
+  /* image field */
+  .imgfield {
+    display: flex; gap: 12px; align-items: center;
+    padding: 10px; border: 1.5px dashed var(--line-2); border-radius: var(--radius);
+    background: #fafbfc; outline: none; transition: border-color .15s, background .15s;
+  }
+  .imgfield:focus { border-color: var(--accent-2); background: var(--accent-soft); }
+  .imgfield.drag { border-color: var(--accent); background: var(--accent-soft); }
+  .imgfield__thumb { width: 132px; height: 84px; flex: none; border-radius: 6px; background: #eceff2 center / cover no-repeat; display: grid; place-items: center; color: var(--muted); font-size: 12px; overflow: hidden; }
+  .imgfield__thumb.contain { background-size: contain; background-color: #fff; }
+  .imgfield__body { min-width: 0; flex: 1; }
+  .imgfield__body p { margin: 0 0 8px; color: var(--ink-2); font-size: 13px; line-height: 1.4; }
+  .imgfield__path { margin-top: 6px; font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* hero position controls */
+  .pos-grid { display: grid; grid-template-columns: 110px 92px 92px 1fr; gap: 8px 10px; align-items: center; }
+  .pos-grid .head { font-size: 12px; color: var(--muted); font-weight: 500; }
+  .pos-grid .name { font-weight: 500; }
+  .num { display: flex; align-items: center; gap: 4px; }
+  .num input { width: 64px; }
+  .num span { color: var(--muted); font-size: 12px; }
+  .seg--align button { padding: 0 8px; }
+  .callout { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; margin-bottom: 14px; background: var(--accent-soft); border-radius: 7px; color: #155e67; font-size: 13px; line-height: 1.5; }
+  .callout svg { margin-top: 2px; }
+
+  /* color fields */
+  .color-row { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .color-row:last-child { border-bottom: 0; padding-bottom: 0; }
+  .color-row:first-of-type { padding-top: 0; }
+  .color-row__label { font-weight: 500; color: var(--ink-2); }
+  .color-row__label small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; }
+  .color-ctl { display: flex; align-items: center; gap: 6px; }
+  .color-ctl input[type=color] { width: 36px; height: 32px; padding: 2px; border: 1px solid var(--line-2); border-radius: 7px; background: #fff; cursor: pointer; }
+  .color-ctl input[type=color]::-webkit-color-swatch-wrapper { padding: 0; }
+  .color-ctl input[type=color]::-webkit-color-swatch { border: 0; border-radius: 5px; }
+  .color-ctl .input.hex { width: 92px; height: 32px; font: 13px ui-monospace, Menlo, monospace; text-transform: lowercase; }
+  .color-ctl .input.hex::placeholder { color: var(--muted); }
+  .color-ctl .reset { visibility: hidden; }
+  .color-ctl.custom .reset { visibility: visible; }
+  .color-note { grid-column: 1 / -1; font-size: 12px; color: var(--warn); }
+  .swatches { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .swatches button { width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgb(0 0 0 / .15); cursor: pointer; padding: 0; }
+
+  /* ---------- News list ---------- */
+  .toolbar { display: flex; gap: 8px; margin-bottom: 12px; }
+  .toolbar .input { flex: 1; }
+  .news-list { display: flex; flex-direction: column; gap: 8px; }
+  .item { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); transition: box-shadow .15s, border-color .15s; }
+  .item.open { border-color: var(--accent-2); box-shadow: var(--shadow); }
+  .item.dragging { opacity: .4; }
+  .item.drop-before { box-shadow: 0 -3px 0 var(--accent-2); }
+  .item.drop-after { box-shadow: 0 3px 0 var(--accent-2); }
+  .item.is-hidden .item__thumb, .item.is-hidden .item__title { opacity: .45; }
+  .item__head { display: flex; align-items: center; gap: 10px; padding: 8px 10px 8px 6px; cursor: pointer; }
+  .item__handle { display: grid; place-items: center; width: 20px; height: 32px; color: #b3bac2; cursor: grab; flex: none; }
+  .item__handle:active { cursor: grabbing; }
+  .item__thumb { width: 64px; height: 40px; flex: none; border-radius: 5px; background: #eceff2 center / cover no-repeat; }
+  .item__meta { min-width: 0; flex: 1; }
+  .item__title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item__sub { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); overflow: hidden; white-space: nowrap; }
+  .item__sub .snippet { overflow: hidden; text-overflow: ellipsis; }
+  .badge { display: inline-block; padding: 1px 6px; border-radius: 99px; font-size: 11px; font-weight: 500; background: #eef0f3; color: var(--ink-2); flex: none; }
+  .badge--warn { background: #fdf3e1; color: var(--warn); }
+  .item__tools { display: flex; gap: 2px; opacity: 0; transition: opacity .15s; }
+  .item__head:hover .item__tools, .item.open .item__tools { opacity: 1; }
+  .item__chev { transition: transform .2s; color: var(--muted); }
+  .item.open .item__chev { transform: rotate(180deg); }
+  .item__body { padding: 6px 16px 16px; border-top: 1px solid var(--line); }
+  .item__body .field:first-child { margin-top: 12px; }
+  .item__actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+
+  /* generic list rows */
+  .list-row { display: grid; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .list-row .tools { display: flex; gap: 2px; }
+  .list-head { display: grid; gap: 8px; margin-bottom: 4px; font-size: 12px; color: var(--muted); font-weight: 500; }
+
+  /* ---------- Preview ---------- */
+  .preview { display: grid; grid-template-rows: 44px 1fr; min-width: 0; background: #e9ecef; }
+  .preview__bar { display: flex; align-items: center; gap: 8px; padding: 0 12px; background: var(--panel); border-bottom: 1px solid var(--line); }
+  .preview__bar .label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-right: 4px; }
+  .seg { display: inline-flex; padding: 2px; background: #eef0f3; border-radius: 7px; }
+  .seg button { height: 26px; padding: 0 10px; background: none; border: 0; border-radius: 5px; cursor: pointer; color: var(--ink-2); font-size: 13px; }
+  .seg button.on { background: #fff; color: var(--ink); box-shadow: 0 1px 2px rgb(0 0 0 / .1); }
+  select.input { width: auto; height: 30px; padding: 0 8px; }
+  .preview__stage { position: relative; min-height: 0; display: flex; justify-content: center; overflow: hidden; }
+  .preview__stage iframe { position: absolute; top: 0; left: 0; border: 0; background: #fff; transform-origin: 0 0; }
+  .preview__stage.mobile iframe { border-radius: 18px; box-shadow: 0 0 0 8px #1d2126, var(--shadow); }
+  .preview__tip { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); padding: 6px 12px; border-radius: 99px; background: rgb(29 33 38 / .85); color: #fff; font-size: 12px; pointer-events: none; }
+
+  /* ---------- Modal & toast ---------- */
+  .modal-back { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 20px; background: rgb(20 24 28 / .45); }
+  .modal { width: min(640px, 100%); max-height: 86vh; overflow: auto; background: var(--panel); border-radius: 12px; box-shadow: 0 20px 60px rgb(0 0 0 / .25); }
+  .modal header { display: flex; align-items: center; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+  .modal header h2 { margin: 0; font-size: 16px; }
+  .modal .content { padding: 18px; }
+  .modal footer { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 18px; border-top: 1px solid var(--line); }
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+  .gallery button { padding: 0; border: 2px solid transparent; border-radius: 7px; background: #eceff2; cursor: pointer; overflow: hidden; }
+  .gallery button:hover { border-color: var(--accent-2); }
+  .gallery img { display: block; width: 100%; height: 86px; object-fit: cover; }
+  .gallery span { display: block; padding: 4px 6px; font-size: 11px; color: var(--ink-2); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; background: #fff; }
+  pre.log { max-height: 240px; overflow: auto; padding: 10px; background: #1d2126; color: #e6e6e6; border-radius: 7px; font-size: 12px; white-space: pre-wrap; }
+  .changes { margin: 8px 0 14px; padding: 8px 10px; max-height: 150px; overflow: auto; background: #f7f8fa; border: 1px solid var(--line); border-radius: 7px; font: 12px ui-monospace, Menlo, monospace; }
+
+  .toasts { position: fixed; left: 50%; bottom: 20px; z-index: 60; display: flex; flex-direction: column; gap: 8px; transform: translateX(-50%); }
+  .toast { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: #1d2126; color: #fff; border-radius: 8px; box-shadow: var(--shadow); animation: rise .2s ease-out; }
+  .toast.error { background: var(--danger); }
+  .toast button { background: none; border: 0; color: var(--accent-2); font-weight: 600; cursor: pointer; padding: 0; }
+  @keyframes rise { from { transform: translateY(8px); opacity: 0; } }
+
+  .empty { padding: 40px 20px; text-align: center; color: var(--muted); }
+  .loading { display: grid; place-items: center; height: 100%; color: var(--muted); }
+
+  @media (max-width: 1100px) {
+    .layout { grid-template-columns: 180px 1fr; }
+    .layout .preview { display: none; }
+    .layout.show-preview { grid-template-columns: 180px 1fr 1fr; }
+    .layout.show-preview .preview { display: grid; }
+  }
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><img src="/assets/images/lt-logo-1-124x121.png" alt="">Website Editor</div>
+    <span class="status" id="status">Loading…</span>
+    <div class="spacer"></div>
+    <button class="btn btn--ghost btn--icon" id="undo" title="Undo (⌘Z)" disabled><svg class="i" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
+    <button class="btn btn--ghost btn--icon" id="redo" title="Redo (⇧⌘Z)" disabled><svg class="i" viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/></svg></button>
+    <button class="btn btn--ghost" id="togglePreview" title="Show/hide preview"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M13 4v16"/></svg>Preview</button>
+    <a class="btn btn--ghost" href="/index.html" target="_blank" title="Open the saved site in a new tab"><svg class="i" viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>Open site</a>
+    <button class="btn" id="discard" disabled>Discard changes</button>
+    <button class="btn btn--primary" id="save" disabled>Save <span class="kbd">⌘S</span></button>
+    <button class="btn" id="publish"><svg class="i" viewBox="0 0 24 24"><path d="M12 16V4"/><path d="m6 10 6-6 6 6"/><path d="M4 20h16"/></svg>Publish…</button>
+  </header>
+
+  <div class="layout" id="layout">
+    <nav class="sidebar" id="sidebar"></nav>
+    <main class="editor" id="editor"><div class="loading">Loading content…</div></main>
+    <section class="preview">
+      <div class="preview__bar">
+        <span class="label">Preview</span>
+        <select class="input" id="previewPage" aria-label="Page to preview"></select>
+        <div class="spacer"></div>
+        <div class="seg" role="group" aria-label="Device">
+          <button class="on" data-device="desktop">Desktop</button>
+          <button data-device="mobile">Mobile</button>
+        </div>
+      </div>
+      <div class="preview__stage" id="stage">
+        <iframe id="frame" title="Live preview"></iframe>
+        <div class="preview__tip" id="tip">Click anything in the preview to edit it</div>
+      </div>
+    </section>
+  </div>
+
+  <div class="toasts" id="toasts"></div>
+
+<script>
+/* =====================================================================
+   State
+   ===================================================================== */
+const S = {
+  content: null,
+  savedJSON: "",
+  panel: localStorage.getItem("editor.panel") || "news",
+  openItem: null,     // index of expanded news item
+  filter: "",
+  history: [],        // JSON snapshots for undo
+  future: [],
+  lastSnapshot: "",
+  previewPage: "index.html",
+  images: null,
+};
+
+const PANELS = [
+  { id: "news",    label: "What's new",      icon: '<path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/>', anchor: "news-title" },
+  { id: "about",   label: "About Me",        icon: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>', anchor: "about" },
+  { id: "contact", label: "Contact",         icon: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>', anchor: "contact" },
+  { id: "hero",    label: "Header & hero",   icon: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="m3 16 5-5 4 4 3-3 6 6"/>', anchor: null },
+  { id: "colors",  label: "Colors",          icon: '<circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2a10 10 0 0 0 0 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.3A5.7 5.7 0 0 0 22 9.8C22 5.5 17.5 2 12 2z"/>', anchor: null },
+  { id: "menu",    label: "Menu & social",   icon: '<path d="M4 6h16M4 12h16M4 18h10"/>', anchor: null },
+  { id: "pages",   label: "Sub pages",       icon: '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/>', anchor: null },
+  { id: "site",    label: "Site settings",   icon: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>', anchor: null },
+];
+
+const SOCIAL_ICONS = [["x", "X (Twitter)"], ["linkedin", "LinkedIn"], ["youtube", "YouTube"], ["mail", "Email"]];
+
+/* =====================================================================
+   Helpers
+   ===================================================================== */
+const $ = (sel, root = document) => root.querySelector(sel);
+
+function h(tag, props = {}, ...children) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) {
+    if (v == null || v === false) continue;
+    if (k === "class") el.className = v;
+    else if (k === "html") el.innerHTML = v;
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2).toLowerCase(), v);
+    else if (k === "style" && typeof v === "object") Object.assign(el.style, v);
+    else if (k in el && typeof v !== "string") el[k] = v;
+    else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of children.flat()) {
+    if (c == null || c === false) continue;
+    el.append(c instanceof Node ? c : document.createTextNode(c));
+  }
+  return el;
+}
+
+const svg = (paths, cls = "i") => {
+  const s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  s.setAttribute("viewBox", "0 0 24 24"); s.setAttribute("class", cls); s.innerHTML = paths;
+  return s;
+};
+const ICON = {
+  up: '<path d="m18 15-6-6-6 6"/>', down: '<path d="m6 9 6 6 6-6"/>', trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+  grip: '<circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>', copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/>',
+  top: '<path d="M5 4h14M12 20V9m-5 5 5-5 5 5"/>', eye: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  eyeoff: '<path d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 5.1A9.8 9.8 0 0 1 12 5c6 0 10 7 10 7a17 17 0 0 1-3.2 3.9M6.6 6.6C3.8 8.5 2 12 2 12s4 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/>',
+  sort: '<path d="M7 4v16m0 0-3-3m3 3 3-3M17 20V4m0 0-3 3m3-3 3 3"/>', upload: '<path d="M12 16V4m-6 6 6-6 6 6M4 20h16"/>',
+  image: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>',
+  link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+  chev: '<path d="m6 9 6 6 6-6"/>',
+};
+
+function toast(msg, { error = false, action, onAction, ms = 3500 } = {}) {
+  const el = h("div", { class: "toast" + (error ? " error" : "") }, msg,
+    action && h("button", { onclick: () => { onAction(); el.remove(); } }, action));
+  $("#toasts").append(el);
+  setTimeout(() => el.remove(), ms);
+}
+
+async function api(path, { method = "GET", body, headers = {} } = {}) {
+  const opts = { method, headers };
+  if (body !== undefined && !(body instanceof Blob)) {
+    opts.body = JSON.stringify(body);
+    opts.headers["Content-Type"] = "application/json";
+  } else if (body) opts.body = body;
+  const res = await fetch(path, opts);
+  const type = res.headers.get("Content-Type") || "";
+  const data = type.includes("json") ? await res.json() : await res.text();
+  if (!res.ok) throw new Error(data.error || data || res.statusText);
+  return data;
+}
+
+const today = () => {
+  const d = new Date();
+  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}`;
+};
+const stripTags = (html) => { const d = document.createElement("div"); d.innerHTML = html || ""; return d.textContent.replace(/\s+/g, " ").trim(); };
+const move = (arr, from, to) => { const [x] = arr.splice(from, 1); arr.splice(to, 0, x); };
+
+/* =====================================================================
+   Change tracking, undo, save
+   ===================================================================== */
+let snapshotTimer, previewTimer;
+
+function changed({ structural = false, skipPreview = false } = {}) {
+  updateStatus();
+  if (!skipPreview) schedulePreview();
+  clearTimeout(snapshotTimer);
+  if (structural) snapshot();
+  else snapshotTimer = setTimeout(snapshot, 700);
+}
+
+function snapshot() {
+  const json = JSON.stringify(S.content);
+  if (json === S.lastSnapshot) return;
+  S.history.push(S.lastSnapshot);
+  if (S.history.length > 200) S.history.shift();
+  S.future = [];
+  S.lastSnapshot = json;
+  updateStatus();
+}
+
+function restore(json) {
+  S.content = JSON.parse(json);
+  S.lastSnapshot = json;
+  renderAll();
+  schedulePreview(0);
+}
+
+function undo() {
+  clearTimeout(snapshotTimer); snapshot();
+  if (!S.history.length) return;
+  S.future.push(S.lastSnapshot);
+  restore(S.history.pop());
+}
+function redo() {
+  if (!S.future.length) return;
+  S.history.push(S.lastSnapshot);
+  restore(S.future.pop());
+}
+
+const isDirty = () => S.content && JSON.stringify(S.content) !== S.savedJSON;
+
+function updateStatus(text) {
+  const st = $("#status");
+  const dirty = isDirty();
+  st.className = "status" + (text ? " busy" : dirty ? " dirty" : "");
+  st.textContent = text || (dirty ? "Unsaved changes" : "All changes saved");
+  $("#save").disabled = !dirty;
+  $("#discard").disabled = !dirty;
+  $("#undo").disabled = !S.history.length && JSON.stringify(S.content) === S.lastSnapshot;
+  $("#redo").disabled = !S.future.length;
+  const count = $("#count-news");
+  if (count) count.textContent = S.content.news.items.length;
+}
+
+// Copy sanitized values from the server back into the live objects, so the
+// field components (which hold references to them) keep working.
+function mergeInPlace(target, source) {
+  for (const key of Object.keys(source)) {
+    const s = source[key], t = target[key];
+    if (s && typeof s === "object" && t && typeof t === "object" && Array.isArray(s) === Array.isArray(t)) mergeInPlace(t, s);
+    else target[key] = s;
+  }
+}
+
+async function save() {
+  if (!isDirty()) return;
+  clearTimeout(snapshotTimer); snapshot();
+  updateStatus("Saving…");
+  try {
+    const res = await api("/api/save", { method: "POST", body: { content: S.content } });
+    mergeInPlace(S.content, res.content);
+    S.savedJSON = S.lastSnapshot = JSON.stringify(S.content);
+    updateStatus();
+    toast(`Saved — ${res.written.join(", ")} updated`);
+  } catch (e) {
+    updateStatus();
+    toast("Save failed: " + e.message, { error: true, ms: 8000 });
+  }
+}
+
+async function discard() {
+  if (!confirm("Discard all unsaved changes?")) return;
+  S.history.push(S.lastSnapshot);
+  restore(S.savedJSON);
+  updateStatus();
+}
+
+/* =====================================================================
+   Field components
+   ===================================================================== */
+function field(label, input, hint) {
+  return h("div", { class: "field" },
+    h("label", {}, label), input, hint && h("div", { class: "hint" }, hint));
+}
+
+function text(obj, key, { placeholder = "", multiline = false, list, type = "text", oninput, rows } = {}) {
+  const el = h(multiline ? "textarea" : "input", {
+    class: "input", placeholder, type: multiline ? null : type, list, rows,
+  });
+  el.value = obj[key] ?? "";
+  el.addEventListener("input", () => { obj[key] = el.value; oninput?.(el.value); changed(); });
+  return el;
+}
+
+function dateInput(obj, key, oninput) {
+  const el = h("input", { class: "input", type: "date" });
+  el.value = (obj[key] || "").replaceAll("/", "-");
+  el.addEventListener("input", () => { obj[key] = el.value.replaceAll("-", "/"); oninput?.(); changed(); });
+  return el;
+}
+
+function toggle(obj, key, label, { invert = false, onchange } = {}) {
+  const input = h("input", { type: "checkbox" });
+  input.checked = invert ? !obj[key] : !!obj[key];
+  input.addEventListener("change", () => { obj[key] = invert ? !input.checked : input.checked; onchange?.(); changed({ structural: true }); });
+  return h("label", { class: "switch" }, input, label);
+}
+
+function select(obj, key, options) {
+  const el = h("select", { class: "input" }, options.map(([v, l]) => h("option", { value: v }, l)));
+  el.value = obj[key] ?? "";
+  el.addEventListener("change", () => { obj[key] = el.value; changed({ structural: true }); });
+  return el;
+}
+
+function rich(obj, key, { block = false, oninput } = {}) {
+  const area = h("div", { class: "rich__area" + (block ? " block" : ""), contenteditable: "true", spellcheck: "true" });
+  area.innerHTML = obj[key] || "";
+  const sync = () => { obj[key] = area.innerHTML; oninput?.(); changed(); };
+  area.addEventListener("input", sync);
+  area.addEventListener("focus", () => document.execCommand("defaultParagraphSeparator", false, block ? "p" : "div"));
+  area.addEventListener("paste", (e) => {
+    // Paste as plain text so formatting from Word/web pages doesn't leak in.
+    const t = e.clipboardData.getData("text/plain");
+    if (!t) return;
+    e.preventDefault();
+    document.execCommand("insertText", false, t);
+  });
+  const cmd = (name, arg) => (e) => { e.preventDefault(); area.focus(); document.execCommand(name, false, arg); sync(); };
+  const addLink = (e) => {
+    e.preventDefault();
+    const sel = window.getSelection();
+    const range = sel.rangeCount && area.contains(sel.anchorNode) ? sel.getRangeAt(0).cloneRange() : null;
+    const url = prompt("Link address (https://…, mailto:…, or a page like page1.html)", "https://");
+    if (!url || url === "https://") return;
+    area.focus();
+    if (range) { sel.removeAllRanges(); sel.addRange(range); }
+    if (!range || range.collapsed) document.execCommand("insertHTML", false, `<a href="${url.replace(/"/g, "&quot;")}">${url.replace(/</g, "&lt;")}</a>`);
+    else document.execCommand("createLink", false, url);
+    sync();
+  };
+  const bar = h("div", { class: "rich__bar" },
+    h("button", { type: "button", title: "Bold (⌘B)", onmousedown: cmd("bold") }, h("b", {}, "B")),
+    h("button", { type: "button", title: "Italic (⌘I)", onmousedown: cmd("italic") }, h("i", {}, "I")),
+    h("button", { type: "button", title: "Add link", onmousedown: addLink }, svg(ICON.link), " Link"),
+    h("button", { type: "button", title: "Remove link", onmousedown: cmd("unlink") }, "Unlink"),
+    !block && h("button", { type: "button", title: "Line break", onmousedown: cmd("insertLineBreak") }, "↵ Line break"),
+  );
+  return h("div", { class: "rich" }, bar, area);
+}
+
+async function uploadFile(file) {
+  if (!file.type.startsWith("image/")) throw new Error("That file isn't an image.");
+  let name = file.name && file.name !== "image.png" ? file.name : `pasted-${Date.now()}.${(file.type.split("/")[1] || "png").replace("jpeg", "jpg")}`;
+  updateStatus("Uploading image…");
+  try {
+    const res = await api("/api/upload", { method: "POST", body: file, headers: { "X-Filename": encodeURIComponent(name).replace(/%/g, "_") } });
+    S.images = null;
+    return res.path;
+  } finally { updateStatus(); }
+}
+
+function imageField(obj, key, { contain = false, onchange } = {}) {
+  const thumb = h("div", { class: "imgfield__thumb" + (contain ? " contain" : "") });
+  const pathEl = h("div", { class: "imgfield__path" });
+  const paint = () => {
+    const v = obj[key];
+    thumb.style.backgroundImage = v ? `url("/${v}")` : "";
+    thumb.textContent = v ? "" : "No image";
+    pathEl.textContent = v || "";
+    pathEl.title = v || "";
+  };
+  const set = (v) => { obj[key] = v; paint(); onchange?.(); changed({ structural: true }); };
+  const handleFiles = async (files) => {
+    const file = [...files].find((f) => f.type.startsWith("image/"));
+    if (!file) return toast("No image found — try a PNG, JPG or WebP.", { error: true });
+    try { set(await uploadFile(file)); toast("Image uploaded"); }
+    catch (e) { toast("Upload failed: " + e.message, { error: true }); }
+  };
+  const fileInput = h("input", { type: "file", accept: "image/*", hidden: true, onchange: (e) => handleFiles(e.target.files) });
+
+  const wrap = h("div", { class: "imgfield", tabindex: "0", title: "Click here, then paste a screenshot with ⌘V" },
+    thumb,
+    h("div", { class: "imgfield__body" },
+      h("p", {}, "Drop an image here, or click this box and paste a screenshot (⌘V)."),
+      h("div", { style: { display: "flex", gap: "6px", flexWrap: "wrap" } },
+        h("button", { class: "btn btn--sm", type: "button", onclick: () => fileInput.click() }, svg(ICON.upload), "Upload…"),
+        h("button", { class: "btn btn--sm", type: "button", onclick: () => pickImage(set) }, svg(ICON.image), "Choose existing…"),
+        obj[key] && h("button", { class: "btn btn--sm btn--ghost btn--danger", type: "button", onclick: (e) => { set(""); e.target.closest("button").remove(); } }, "Remove"),
+      ),
+      pathEl, fileInput,
+    ),
+  );
+  wrap.addEventListener("paste", (e) => {
+    if (e.clipboardData.files.length) { e.preventDefault(); handleFiles(e.clipboardData.files); }
+  });
+  wrap.addEventListener("dragover", (e) => { e.preventDefault(); wrap.classList.add("drag"); });
+  wrap.addEventListener("dragleave", () => wrap.classList.remove("drag"));
+  wrap.addEventListener("drop", (e) => {
+    e.preventDefault(); wrap.classList.remove("drag");
+    if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
+  });
+  paint();
+  return wrap;
+}
+
+async function pickImage(onPick) {
+  if (!S.images) S.images = await api("/api/images");
+  const close = () => back.remove();
+  const search = h("input", { class: "input", placeholder: "Filter by file name…", style: { marginBottom: "12px" } });
+  const grid = h("div", { class: "gallery" });
+  const paint = () => {
+    grid.replaceChildren(...S.images
+      .filter((p) => p.toLowerCase().includes(search.value.toLowerCase()))
+      .map((p) => h("button", { type: "button", title: p, onclick: () => { onPick(p); close(); } },
+        h("img", { src: "/" + p, loading: "lazy", alt: "" }), h("span", {}, p.split("/").pop()))));
+  };
+  search.addEventListener("input", paint);
+  const back = h("div", { class: "modal-back", onclick: (e) => e.target === back && close() },
+    h("div", { class: "modal" },
+      h("header", {}, h("h2", {}, "Choose an image"), h("div", { class: "spacer" }), h("button", { class: "btn btn--ghost", onclick: close }, "Close")),
+      h("div", { class: "content" }, search, grid)));
+  paint();
+  document.body.append(back);
+  search.focus();
+}
+
+/* generic editable list (menu links, social icons, pages…) */
+function listEditor(arr, columns, { newItem, addLabel = "Add", fixed = false } = {}) {
+  const template = columns.map((c) => c.width || "1fr").join(" ") + (fixed ? "" : " auto");
+  const wrap = h("div");
+  const paint = () => {
+    wrap.replaceChildren(
+      h("div", { class: "list-head", style: { gridTemplateColumns: template } }, columns.map((c) => h("div", {}, c.label)), !fixed && h("div", { style: { width: "96px" } })),
+      ...arr.map((row, i) => h("div", { class: "list-row", style: { gridTemplateColumns: template } },
+        columns.map((c) => c.render(row)),
+        !fixed && h("div", { class: "tools" },
+          h("button", { class: "btn btn--ghost btn--icon", title: "Move up", disabled: i === 0, onclick: () => { move(arr, i, i - 1); paint(); changed({ structural: true }); } }, svg(ICON.up)),
+          h("button", { class: "btn btn--ghost btn--icon", title: "Move down", disabled: i === arr.length - 1, onclick: () => { move(arr, i, i + 1); paint(); changed({ structural: true }); } }, svg(ICON.down)),
+          h("button", { class: "btn btn--ghost btn--icon btn--danger", title: "Remove", onclick: () => { arr.splice(i, 1); paint(); changed({ structural: true }); } }, svg(ICON.trash)),
+        ))),
+      !fixed && h("button", { class: "btn btn--sm", style: { marginTop: "4px" }, onclick: () => { arr.push(newItem()); paint(); changed({ structural: true }); wrap.querySelector(".list-row:last-of-type input")?.focus(); } }, svg(ICON.plus), addLabel),
+    );
+  };
+  paint();
+  return wrap;
+}
+
+/* =====================================================================
+   Panels
+   ===================================================================== */
+function panelHead(title, desc, ...actions) {
+  return h("div", { class: "panel-head" },
+    h("div", {}, h("h1", {}, title), desc && h("p", {}, desc)),
+    actions.length ? h("div", { class: "actions" }, actions) : null);
+}
+
+const Panels = {
+  news() {
+    const news = S.content.news;
+    const list = h("div", { class: "news-list" });
+    const titles = [...new Set(news.items.map((i) => i.title))];
+    const datalist = h("datalist", { id: "title-suggestions" }, titles.map((t) => h("option", { value: t })));
+
+    const addItem = () => {
+      news.items.unshift({ title: "New paper!", date: today(), image: "", text: "", link: "" });
+      S.openItem = 0;
+      S.filter = "";
+      changed({ structural: true });
+      renderPanel();
+      setTimeout(() => $(".item.open input")?.select(), 30);
+    };
+    const sortByDate = () => {
+      const open = news.items[S.openItem];
+      news.items.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+      S.openItem = open ? news.items.indexOf(open) : null;
+      changed({ structural: true });
+      renderPanel();
+      toast("Sorted newest first", { action: "Undo", onAction: undo });
+    };
+
+    const search = h("input", { class: "input", placeholder: "Search news…", value: S.filter, type: "search" });
+    search.addEventListener("input", () => { S.filter = search.value; paintList(); });
+
+    let dragFrom = null;
+    const paintList = () => {
+      const q = S.filter.toLowerCase();
+      const rows = news.items.map((item, i) => [item, i])
+        .filter(([item]) => !q || (item.title + " " + item.date + " " + stripTags(item.text)).toLowerCase().includes(q));
+      if (!rows.length) return list.replaceChildren(h("div", { class: "empty" }, "No news items match."));
+      list.replaceChildren(...rows.map(([item, i]) => newsItem(item, i)));
+    };
+
+    const newsItem = (item, i) => {
+      const open = S.openItem === i;
+      const titleEl = h("div", { class: "item__title" });
+      const snippetEl = h("span", { class: "snippet" });
+      const dateEl = h("span", {});
+      const thumbEl = h("div", { class: "item__thumb" });
+      const warnEl = h("span", {});
+      const paintHead = () => {
+        titleEl.textContent = item.title || "(untitled)";
+        dateEl.textContent = item.date || "no date";
+        snippetEl.textContent = stripTags(item.text);
+        thumbEl.style.backgroundImage = item.image ? `url("/${item.image}")` : "";
+        const missing = [!item.image && "image", !item.link && "link", !item.date && "date"].filter(Boolean);
+        warnEl.replaceChildren(
+          ...(item.hidden ? [h("span", { class: "badge" }, "Hidden")] : []),
+          ...(missing.length ? [h("span", { class: "badge badge--warn", title: "Optional, but usually wanted" }, "No " + missing.join(", "))] : []));
+      };
+      paintHead();
+
+      const remove = () => {
+        news.items.splice(i, 1);
+        if (S.openItem === i) S.openItem = null; else if (S.openItem > i) S.openItem--;
+        changed({ structural: true });
+        renderPanel();
+        toast(`Deleted “${item.title}”`, { action: "Undo", onAction: undo, ms: 6000 });
+      };
+      const moveTo = (to) => {
+        if (to < 0 || to >= news.items.length) return;
+        move(news.items, i, to);
+        if (S.openItem === i) S.openItem = to;
+        changed({ structural: true });
+        renderPanel();
+      };
+      const stop = (fn) => (e) => { e.stopPropagation(); fn(); };
+
+      const head = h("div", { class: "item__head", onclick: () => { S.openItem = open ? null : i; renderPanel(); if (!open) focusPreviewCard(i); } },
+        h("div", { class: "item__handle", title: "Drag to reorder", draggable: "true" }, svg(ICON.grip)),
+        thumbEl,
+        h("div", { class: "item__meta" }, titleEl, h("div", { class: "item__sub" }, dateEl, warnEl, snippetEl)),
+        h("div", { class: "item__tools" },
+          h("button", { class: "btn btn--ghost btn--icon", title: "Move up", disabled: i === 0, onclick: stop(() => moveTo(i - 1)) }, svg(ICON.up)),
+          h("button", { class: "btn btn--ghost btn--icon", title: "Move down", disabled: i === news.items.length - 1, onclick: stop(() => moveTo(i + 1)) }, svg(ICON.down)),
+        ),
+        svg(ICON.chev, "i item__chev"),
+      );
+
+      const el = h("div", { class: "item" + (open ? " open" : "") + (item.hidden ? " is-hidden" : ""), "data-index": i }, head);
+
+      // drag & drop reordering (from the grip handle)
+      const handle = head.querySelector(".item__handle");
+      handle.addEventListener("click", (e) => e.stopPropagation());
+      handle.addEventListener("dragstart", (e) => { dragFrom = i; el.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setDragImage(el, 20, 20); });
+      handle.addEventListener("dragend", () => { dragFrom = null; el.classList.remove("dragging"); });
+      el.addEventListener("dragover", (e) => {
+        if (dragFrom === null) return;
+        e.preventDefault();
+        const after = e.offsetY > el.offsetHeight / 2;
+        el.classList.toggle("drop-after", after); el.classList.toggle("drop-before", !after);
+      });
+      el.addEventListener("dragleave", () => el.classList.remove("drop-after", "drop-before"));
+      el.addEventListener("drop", (e) => {
+        if (dragFrom === null) return;
+        e.preventDefault();
+        const after = el.classList.contains("drop-after");
+        el.classList.remove("drop-after", "drop-before");
+        let to = i + (after ? 1 : 0);
+        if (dragFrom < to) to--;
+        const from = dragFrom; dragFrom = null;
+        if (from === to) return;
+        const openObj = news.items[S.openItem];
+        move(news.items, from, to);
+        S.openItem = openObj ? news.items.indexOf(openObj) : null;
+        changed({ structural: true });
+        renderPanel();
+      });
+
+      if (open) {
+        el.append(h("div", { class: "item__body" },
+          h("div", { class: "row" },
+            field("Title", text(item, "title", { list: "title-suggestions", oninput: paintHead })),
+            field("Date", dateInput(item, "date", paintHead))),
+          field("Image", imageField(item, "image", { onchange: paintHead })),
+          field("Description", rich(item, "text", { oninput: paintHead })),
+          field("“Learn more” link", text(item, "link", { placeholder: "https://arxiv.org/abs/…", type: "url", oninput: paintHead }),
+            "Leave empty to hide the button."),
+          h("div", { class: "item__actions" },
+            toggle(item, "hidden", "Show on website", { invert: true, onchange: () => { paintHead(); el.classList.toggle("is-hidden", !!item.hidden); } }),
+            h("div", { class: "spacer" }),
+            i > 0 && h("button", { class: "btn btn--sm", onclick: () => moveTo(0) }, svg(ICON.top), "Move to top"),
+            h("button", { class: "btn btn--sm", onclick: () => {
+              news.items.splice(i, 0, structuredClone(item)); S.openItem = i; changed({ structural: true }); renderPanel();
+            } }, svg(ICON.copy), "Duplicate"),
+            h("button", { class: "btn btn--sm btn--danger", onclick: remove }, svg(ICON.trash), "Delete"),
+          ),
+        ));
+      }
+      return el;
+    };
+
+    paintList();
+    return [
+      panelHead("What's new", `${news.items.length} items · shown newest first in the carousel`,
+        h("button", { class: "btn btn--primary", onclick: addItem }, svg(ICON.plus), "Add news item")),
+      h("div", { class: "toolbar" }, search,
+        h("button", { class: "btn", title: "Sort all items by date, newest first", onclick: sortByDate }, svg(ICON.sort), "Sort by date")),
+      list, datalist,
+      h("div", { class: "card", style: { marginTop: "18px" } },
+        h("h3", {}, "Section settings"),
+        h("div", { class: "row" },
+          field("Section title", text(news, "title")),
+          field("Auto-advance (seconds)", text(news, "autoplaySeconds", { type: "number" }), "0 turns auto-advance off."))),
+    ];
+  },
+
+  about() {
+    const a = S.content.about;
+    return [
+      panelHead("About Me", "The introduction and photo on the home page."),
+      h("div", { class: "card" },
+        field("Section title", text(a, "title")),
+        field("Text", rich(a, "body", { block: true }), "Press Enter for a new paragraph. Select words and click Link to add a link.")),
+      h("div", { class: "card" },
+        h("h3", {}, "Photo"),
+        field("Image", imageField(a, "photo")),
+        field("Photo description (for screen readers)", text(a, "photoAlt"))),
+    ];
+  },
+
+  contact() {
+    const c = S.content.contact;
+    return [
+      panelHead("Contact", "The contact cards at the bottom of the home page."),
+      h("div", { class: "card" },
+        field("Section title", text(c, "title")),
+        field("Email", text(c, "email", { type: "email" })),
+        field("Office address", text(c, "office", { multiline: true, rows: 4 }), "One line per row.")),
+    ];
+  },
+
+  hero() {
+    const hero = S.content.hero, site = S.content.site;
+    return [
+      panelHead("Header & hero", "The big banner at the top of the home page, and the logo."),
+      h("div", { class: "card" },
+        h("h3", {}, "Hero banner"),
+        field("Name", text(hero, "name")),
+        field("Tagline", text(hero, "tagline")),
+        field("Background image", imageField(hero, "image")),
+        field("Image credit", text(hero, "credit"), "Shown small in the corner. Leave empty to hide.")),
+      heroPositionCard(),
+      h("div", { class: "card" }, h("h3", {}, "Text colors"), ...heroColorRows()),
+      h("div", { class: "card" },
+        h("h3", {}, "Logo"),
+        field("Logo (top-left of every page)", imageField(site, "logo", { contain: true })),
+        field("Browser tab icon", imageField(site, "favicon", { contain: true }))),
+    ];
+  },
+
+  colors() {
+    const t = theme();
+    const hasCustom = Object.keys(t).length || S.content.social.some((s) => s.color);
+    return [
+      panelHead("Colors", "Leave a color empty to use the default. Changes show in the preview as you pick.",
+        hasCustom && h("button", { class: "btn btn--danger", onclick: () => {
+          S.content.theme = {};
+          S.content.social.forEach((s) => delete s.color);
+          changed({ structural: true }); renderPanel();
+          toast("All colors reset to defaults", { action: "Undo", onAction: undo });
+        } }, "Reset all colors")),
+      h("div", { class: "card" },
+        h("h3", {}, "Accent"),
+        colorRow("accent", "Accent color", { hint: "Links, hover effects and highlights across the site.", bg: "#fafafa" })),
+      h("div", { class: "card" },
+        h("h3", {}, "Top menu bar"),
+        colorRow("nav-bg", "Bar background", { hint: "Slightly see-through over the page." }),
+        colorRow("nav-link", "Menu text", { bg: "nav-bg" }),
+        colorRow("nav-link-hover", "Menu text on hover / current page", { hint: "Defaults to the accent color.", bg: "nav-bg" }),
+        colorRow("social-color", "Social icons (X, LinkedIn, …)", { bg: "nav-bg" }),
+        colorRow("social-hover", "Social icons on hover", { hint: "Defaults to the accent color.", bg: "nav-bg" }),
+        h("div", { style: { display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "12px" } },
+          h("button", { class: "btn btn--sm", onclick: () => setBrandColors(true) }, "Use brand colors for icons"),
+          h("button", { class: "btn btn--sm btn--ghost", onclick: () => showPanel("menu") }, "Set each icon's color…"))),
+      h("div", { class: "card" },
+        h("h3", {}, "Hero banner"),
+        ...heroColorRows()),
+      h("div", { class: "card" },
+        h("h3", {}, "Sections"),
+        colorRow("news-title", "“What's new?” title", { bg: "#232323" }),
+        colorRow("about-title", "“About Me” title", { bg: "#fafafa" }),
+        colorRow("about-text", "About Me text", { bg: "#fafafa" }),
+        colorRow("contact-title", "“Contact” title", { bg: "#232323" }),
+        colorRow("footer-text", "Footer text", { bg: "#232323" })),
+    ];
+  },
+
+  menu() {
+    const nav = S.content.nav;
+    const input = (key, placeholder) => (row) => text(row, key, { placeholder });
+    const newTab = (row) => { const t = toggle(row, "newTab", ""); t.title = "Open in a new tab"; return t; };
+    return [
+      panelHead("Menu & social", "The navigation bar shown on every page. The home icon is always first."),
+      h("div", { class: "card" },
+        h("h3", {}, "Menu links"),
+        listEditor(nav.links, [
+          { label: "Label", render: input("label", "Label") },
+          { label: "Link", width: "1.6fr", render: input("href", "page1.html or https://…") },
+          { label: "New tab", width: "64px", render: newTab },
+        ], { newItem: () => ({ label: "New link", href: "https://", newTab: true }), addLabel: "Add menu link" }),
+        h("div", { class: "hint" }, "Tip: link to a file like assets/files/resume.pdf, a section like index.html#about, or any web address.")),
+      h("div", { class: "card" },
+        h("h3", {}, "Dropdown menu"),
+        field("Dropdown label", text(nav, "dropdownLabel")),
+        listEditor(nav.dropdown, [
+          { label: "Label", render: input("label", "Label") },
+          { label: "Link", width: "1.6fr", render: input("href", "https://…") },
+          { label: "Icon", width: "110px", render: (row) => select(row, "icon", [["", "None"], ...SOCIAL_ICONS]) },
+        ], { newItem: () => ({ label: "New link", href: "https://", icon: "" }), addLabel: "Add dropdown link" }),
+        h("div", { class: "hint" }, "Remove every item to hide the dropdown.")),
+      h("div", { class: "card" },
+        h("h3", {}, "Social icons"),
+        listEditor(S.content.social, [
+          { label: "Icon", width: "130px", render: (row) => {
+            // The icon's name doubles as its label for screen readers.
+            const el = select(row, "icon", SOCIAL_ICONS);
+            el.addEventListener("change", () => { row.label = Object.fromEntries(SOCIAL_ICONS)[row.icon]; });
+            return el;
+          } },
+          { label: "Link", render: input("href", "https://…") },
+          { label: "Color", width: "74px", render: (row) => colorControl({
+            compact: true,
+            get: () => row.color || "",
+            set: (v) => { if (v) row.color = v; else delete row.color; },
+            fallback: () => effectiveColor("social-color"),
+          }).ctl },
+        ], { newItem: () => ({ icon: "linkedin", label: "LinkedIn", href: "https://" }), addLabel: "Add social icon" }),
+        h("div", { style: { display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" } },
+          h("button", { class: "btn btn--sm", onclick: () => setBrandColors(true) }, "Use brand colors"),
+          h("button", { class: "btn btn--sm btn--ghost", onclick: () => setBrandColors(false) }, "Same color for all"),
+          h("button", { class: "btn btn--sm btn--ghost", onclick: () => showPanel("colors") }, "More color settings…"))),
+      h("div", { class: "card" },
+        h("h3", {}, "Resume"),
+        h("p", { style: { margin: "0 0 8px", color: "var(--ink-2)" } }, "To update your resume, replace the file ", h("code", {}, "assets/files/resume.pdf"), " with the new PDF (same name), then Publish.")),
+    ];
+  },
+
+  pages() {
+    return [
+      panelHead("Sub pages", "The Research and Outreach pages."),
+      ...S.content.pages.map((p) => h("div", { class: "card" },
+        h("h3", {}, `${p.title} · ${p.file}`),
+        h("div", { class: "row" },
+          field("Page name (browser tab)", text(p, "title")),
+          field("Heading", text(p, "heading"))),
+        field("Message", text(p, "message", { multiline: true, rows: 2 })),
+        field("Search engine description", text(p, "description", { placeholder: "Optional" })),
+        h("button", { class: "btn btn--sm", onclick: () => setPreviewPage(p.file) }, svg(ICON.eye), "Preview this page"))),
+    ];
+  },
+
+  site() {
+    const s = S.content.site;
+    return [
+      panelHead("Site settings", "How the site appears in search results and when shared."),
+      h("div", { class: "card" },
+        field("Home page title", text(s, "title"), "Shown in the browser tab and search results."),
+        field("Description", text(s, "description", { multiline: true, rows: 3 }), "One or two sentences for search engines and link previews."),
+        field("Your name", text(s, "author"), "Used in the footer and page titles."),
+        field("Website address", text(s, "url", { type: "url" })),
+        field("Link preview image", imageField(s, "ogImage"), "Shown when the site is shared on social media.")),
+    ];
+  },
+};
+
+/* =====================================================================
+   Colors
+   ===================================================================== */
+let META = { themeDefaults: {} };
+let colorUpdaters = [];   // refresh contrast notes when a related color changes
+const HEX = /^#[0-9a-f]{6}$/i;
+const PALETTE = ["#232323", "#ffffff", "#fafafa", "#40b0bf", "#1f7f8c", "#0a66c2", "#e0a800", "#e4572e", "#7b61ff", "#2f855a"];
+const BRAND_COLORS = { x: "#000000", linkedin: "#0a66c2", youtube: "#ff0000" };
+const DERIVED = { "nav-link-hover": "accent", "social-hover": "accent", "hero-line": "hero-name" };
+
+const theme = () => (S.content.theme ??= {});
+function effectiveColor(key) {
+  return theme()[key] || (DERIVED[key] ? effectiveColor(DERIVED[key]) : META.themeDefaults[key]);
+}
+
+function luminance(hex) {
+  const [r, g, b] = [1, 3, 5].map((i) => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+function contrast(a, b) {
+  const [l1, l2] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (l1 + 0.05) / (l2 + 0.05);
+}
+
+// Instant preview while dragging a color picker (no re-render).
+function applyColorsToPreview() {
+  const doc = frame.contentDocument;
+  if (!doc?.documentElement) return;
+  const root = doc.documentElement.style;
+  for (const key of Object.keys(META.themeDefaults)) {
+    if (theme()[key]) root.setProperty("--" + key, theme()[key]);
+  }
+  doc.querySelectorAll(".nav__social a").forEach((a, i) => {
+    const c = S.content.social[i]?.color;
+    if (c) a.style.setProperty("--icon-color", c);
+  });
+}
+
+/* A color picker + hex box + reset. `get`/`set` let it bind to theme keys or
+   to per-icon colors; `bg` (a function) enables the readability warning. */
+function colorControl({ get, set, fallback, bg, compact = false }) {
+  const picker = h("input", { type: "color", title: "Pick a color" });
+  const hex = h("input", { class: "input hex", maxlength: "7", spellcheck: "false", hidden: compact });
+  const ctl = h("div", { class: "color-ctl" }, picker, hex);
+  const note = h("div", { class: "color-note", hidden: true });
+  const reset = h("button", { class: "btn btn--ghost btn--icon reset", title: "Reset to default", type: "button" }, svg('<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>'));
+  ctl.append(reset);
+
+  const paint = () => {
+    const value = get();
+    const shown = value || fallback();
+    picker.value = shown;
+    if (document.activeElement !== hex) hex.value = value || "";
+    hex.placeholder = fallback();
+    ctl.classList.toggle("custom", !!value);
+    if (bg) {
+      const ratio = contrast(shown, bg.value());
+      // Only warn about choices the user made, not the site's defaults.
+      note.hidden = ratio >= 3 || !(value || bg.custom());
+      note.textContent = `Hard to read on this background (contrast ${ratio.toFixed(1)}:1)`;
+    }
+  };
+  const update = (v, { live = true } = {}) => {
+    set(v);
+    paint();
+    colorUpdaters.forEach((fn) => fn !== paint && fn());
+    if (live && v) { applyColorsToPreview(); changed({ skipPreview: true }); }
+    else changed({ structural: true });
+  };
+  picker.addEventListener("input", () => update(picker.value));
+  picker.addEventListener("change", () => { clearTimeout(snapshotTimer); snapshot(); });
+  hex.addEventListener("input", () => {
+    let v = hex.value.trim();
+    if (v && !v.startsWith("#")) v = "#" + v;
+    if (HEX.test(v)) update(v.toLowerCase());
+    else if (!v) update("", { live: false });
+  });
+  hex.addEventListener("blur", paint);
+  reset.addEventListener("click", () => update("", { live: false }));
+  colorUpdaters.push(paint);
+  paint();
+  return { ctl, note };
+}
+
+function colorRow(key, label, { hint, bg } = {}) {
+  const { ctl, note } = colorControl({
+    get: () => theme()[key] || "",
+    set: (v) => { if (v) theme()[key] = v; else delete theme()[key]; },
+    fallback: () => (DERIVED[key] ? effectiveColor(DERIVED[key]) : META.themeDefaults[key]),
+    bg: bg && {
+      value: () => (bg.startsWith("#") ? bg : effectiveColor(bg)),
+      custom: () => !bg.startsWith("#") && !!theme()[bg],
+    },
+  });
+  return h("div", { class: "color-row" },
+    h("div", { class: "color-row__label" }, label, hint && h("small", {}, hint)), ctl, note);
+}
+
+function setBrandColors(on) {
+  for (const item of S.content.social) {
+    if (on && BRAND_COLORS[item.icon]) item.color = BRAND_COLORS[item.icon];
+    else delete item.color;
+  }
+  changed({ structural: true });
+  renderPanel();
+}
+
+/* =====================================================================
+   Hero text positions
+   ===================================================================== */
+const HERO_OBJECTS = [["name", "Name"], ["tagline", "Tagline"], ["credit", "Image credit"]];
+const ALIGN_FRACTION = { left: 0, center: 0.5, right: 1 };
+const round1 = (n) => Math.round(n * 10) / 10;
+const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
+
+function previewHero() {
+  const doc = frame.contentDocument;
+  const hero = doc?.querySelector(".hero");
+  if (!hero || S.previewPage !== "index.html") return null;
+  return { doc, hero };
+}
+
+// Read where the text currently sits in the preview, as percentages of the banner.
+function measureHero() {
+  const p = previewHero();
+  if (!p) return null;
+  const hb = p.hero.getBoundingClientRect();
+  const defaults = { name: "left", tagline: "left", credit: "right" };
+  const out = {};
+  p.doc.querySelectorAll(".hero__obj").forEach((el) => {
+    const key = el.dataset.obj;
+    const existing = S.content.hero.positions?.[key];
+    if (existing) { out[key] = { ...existing }; return; }
+    const range = p.doc.createRange();
+    range.selectNodeContents(el);
+    const text = range.getBoundingClientRect(), box = el.getBoundingClientRect();
+    const align = defaults[key] || "left";
+    const anchor = align === "right" ? text.right : align === "center" ? (text.left + text.right) / 2 : text.left;
+    out[key] = {
+      x: round1((anchor - hb.left) / hb.width * 100),
+      y: round1((box.top + box.height / 2 - hb.top) / hb.height * 100),
+      align,
+    };
+  });
+  return out;
+}
+
+// Apply positions to the preview DOM directly (no re-render), mirroring build.py.
+function applyHeroPositions(positions) {
+  const p = previewHero();
+  if (!p) return;
+  p.hero.classList.add("hero--free");
+  p.doc.querySelectorAll(".hero__obj").forEach((el) => {
+    const pos = positions[el.dataset.obj];
+    if (!pos) return;
+    el.style.setProperty("--x", pos.x + "%");
+    el.style.setProperty("--y", pos.y + "%");
+    el.dataset.align = pos.align;
+  });
+}
+
+function customizeHero() {
+  if (S.previewPage !== "index.html") setPreviewPage("index.html");
+  const positions = measureHero();
+  if (!positions) return toast("Wait for the preview to load, then try again.", { error: true });
+  S.content.hero.positions = positions;
+  changed({ structural: true });
+  if (S.panel === "hero") renderPanel();
+}
+
+function setHeroAlign(key, align) {
+  const pos = S.content.hero.positions[key];
+  const p = previewHero();
+  const el = p?.doc.querySelector(`.hero__obj[data-obj="${key}"]`);
+  if (el) {
+    // Keep the text visually in place: move the anchor point by the width difference.
+    const w = el.getBoundingClientRect().width / p.hero.getBoundingClientRect().width * 100;
+    const left = pos.x - ALIGN_FRACTION[pos.align] * w;
+    pos.x = round1(clamp(left + ALIGN_FRACTION[align] * w, 0, 100));
+  }
+  pos.align = align;
+  changed({ structural: true });
+  renderPanel();
+}
+
+function heroColorRows() {
+  return [
+    colorRow("hero-name", "Name"),
+    colorRow("hero-line", "Line under the name", { hint: "Defaults to the name color." }),
+    colorRow("hero-tagline", "Tagline"),
+    S.content.hero.credit && colorRow("hero-credit", "Image credit"),
+  ];
+}
+
+function heroPositionCard() {
+  const hero = S.content.hero;
+  const positions = hero.positions;
+  const tip = h("div", { class: "callout" }, svg('<path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/>'),
+    h("div", {}, h("b", {}, "Drag the text in the preview to move it."), " It snaps to the center and to the other text — hold ⌥ Option to move freely. Phones always use the centered layout."));
+
+  if (!positions) {
+    return h("div", { class: "card" }, h("h3", {}, "Text position"), tip,
+      h("p", { style: { margin: "0 0 10px", color: "var(--ink-2)" } }, "Currently using the automatic layout."),
+      h("button", { class: "btn btn--sm", onclick: customizeHero }, "Set positions manually"));
+  }
+
+  const numInput = (pos, key, lo, hi) => {
+    const el = h("input", { class: "input", type: "number", min: lo, max: hi, step: "0.5" });
+    el.value = pos[key];
+    el.addEventListener("input", () => {
+      const v = parseFloat(el.value);
+      if (Number.isNaN(v)) return;
+      pos[key] = clamp(v, lo, hi);
+      applyHeroPositions(hero.positions);
+      changed({ skipPreview: true });
+    });
+    return h("div", { class: "num" }, el, h("span", {}, "%"));
+  };
+
+  const rows = HERO_OBJECTS.filter(([key]) => positions[key]).map(([key, label]) => {
+    const pos = positions[key];
+    return [
+      h("div", { class: "name" }, label),
+      numInput(pos, "x", 0, 100),
+      numInput(pos, "y", 0, 100),
+      h("div", { class: "seg seg--align" }, ["left", "center", "right"].map((a) =>
+        h("button", { class: pos.align === a ? "on" : "", title: `Align ${a}`, onclick: () => setHeroAlign(key, a) },
+          a[0].toUpperCase() + a.slice(1)))),
+    ];
+  });
+
+  return h("div", { class: "card" },
+    h("h3", {}, "Text position"), tip,
+    h("div", { class: "pos-grid" },
+      h("div", { class: "head" }, ""), h("div", { class: "head" }, "Across (X)"), h("div", { class: "head" }, "Down (Y)"), h("div", { class: "head" }, "Text alignment"),
+      ...rows.flat()),
+    h("div", { style: { display: "flex", gap: "8px", marginTop: "14px", flexWrap: "wrap" } },
+      h("button", { class: "btn btn--sm", onclick: () => {
+        for (const pos of Object.values(hero.positions)) { if (pos !== hero.positions.credit) { pos.x = 50; pos.align = "center"; } }
+        changed({ structural: true }); renderPanel();
+      } }, "Center name & tagline"),
+      h("button", { class: "btn btn--sm btn--ghost btn--danger", onclick: () => {
+        delete hero.positions; changed({ structural: true }); renderPanel();
+        toast("Back to the automatic layout", { action: "Undo", onAction: undo });
+      } }, "Reset to automatic layout")));
+}
+
+// Drag hero text inside the preview iframe.
+let heroJustDragged = false;
+function enableHeroDragging(doc) {
+  const hero = doc.querySelector(".hero");
+  if (!hero) return;
+  const guides = { x: doc.createElement("div"), y: doc.createElement("div") };
+  guides.x.className = "edit-guide edit-guide--x";
+  guides.y.className = "edit-guide edit-guide--y";
+  hero.append(guides.x, guides.y);
+
+  hero.querySelectorAll(".hero__obj").forEach((el) => {
+    el.dataset.edit = "";
+    el.title = "Drag to move · click to edit";
+    el.addEventListener("click", (e) => {
+      e.preventDefault(); e.stopPropagation();
+      if (!heroJustDragged) showPanel("hero");
+    });
+    el.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0) return;
+      if ($("#stage").classList.contains("mobile")) {
+        toast("Switch the preview to Desktop to move text — phones use the centered layout.");
+        return;
+      }
+      e.preventDefault();
+      const key = el.dataset.obj;
+      const startX = e.clientX, startY = e.clientY;
+      let positions = null, start, box;
+      try { el.setPointerCapture(e.pointerId); } catch {}
+
+      const onMove = (ev) => {
+        const dx = ev.clientX - startX, dy = ev.clientY - startY;
+        if (!positions) {
+          if (Math.hypot(dx, dy) < 4) return;
+          positions = measureHero();
+          if (!positions?.[key]) return;
+          applyHeroPositions(positions);
+          box = hero.getBoundingClientRect();
+          start = { ...positions[key] };
+          el.classList.add("edit-dragging");
+          doc.body.style.userSelect = "none";
+        }
+        let x = start.x + dx / box.width * 100;
+        let y = start.y + dy / box.height * 100;
+        let snapX = null, snapY = null;
+        if (!ev.altKey) {
+          const tolX = 8 / box.width * 100, tolY = 8 / box.height * 100;
+          const xTargets = [50, ...Object.entries(positions).filter(([k]) => k !== key).map(([, p]) => p.x)];
+          for (const t of xTargets) if (Math.abs(x - t) < tolX) { x = t; snapX = t; break; }
+          if (Math.abs(y - 50) < tolY) { y = 50; snapY = 50; }
+        }
+        positions[key].x = round1(clamp(x, 0, 100));
+        positions[key].y = round1(clamp(y, 9, 99));
+        applyHeroPositions(positions);
+        guides.x.style.left = snapX + "%"; guides.x.hidden = snapX === null;
+        guides.y.style.top = snapY + "%"; guides.y.hidden = snapY === null;
+      };
+      const onUp = () => {
+        doc.removeEventListener("pointermove", onMove);
+        doc.removeEventListener("pointerup", onUp);
+        doc.removeEventListener("pointercancel", onUp);
+        guides.x.hidden = guides.y.hidden = true;
+        el.classList.remove("edit-dragging");
+        doc.body.style.userSelect = "";
+        if (!positions) return;
+        S.content.hero.positions = positions;
+        heroJustDragged = true;
+        setTimeout(() => { heroJustDragged = false; }, 50);
+        changed({ structural: true, skipPreview: true });
+        if (S.panel !== "hero") { S.panel = "hero"; localStorage.setItem("editor.panel", "hero"); renderSidebar(); }
+        renderPanel();
+      };
+      doc.addEventListener("pointermove", onMove);
+      doc.addEventListener("pointerup", onUp);
+      doc.addEventListener("pointercancel", onUp);
+    });
+  });
+  guides.x.hidden = guides.y.hidden = true;
+}
+
+/* =====================================================================
+   Rendering
+   ===================================================================== */
+function renderSidebar() {
+  $("#sidebar").replaceChildren(
+    h("h2", {}, "Sections"),
+    ...PANELS.map((p) => h("button", { class: "navbtn" + (S.panel === p.id ? " active" : ""), onclick: () => showPanel(p.id) },
+      svg(p.icon), p.label, p.id === "news" && h("span", { class: "count", id: "count-news" }, S.content.news.items.length))),
+    h("div", { class: "help" },
+      h("div", {}, h("b", {}, "1. Edit"), " — changes show in the preview instantly."),
+      h("div", {}, h("b", {}, "2. Save"), " (⌘S) — writes the website files."),
+      h("div", {}, h("b", {}, "3. Publish"), " — uploads to GitHub so the live site updates.")),
+  );
+}
+
+function renderPanel() {
+  const editor = $("#editor");
+  const scroll = editor.scrollTop;
+  colorUpdaters = [];
+  editor.replaceChildren(...Panels[S.panel]());
+  editor.scrollTop = scroll;
+  updateStatus();
+}
+
+function renderAll() { renderSidebar(); renderPanel(); }
+
+function showPanel(id) {
+  if (S.panel !== id) { S.panel = id; S.openItem = null; $("#editor").scrollTop = 0; }
+  localStorage.setItem("editor.panel", id);
+  renderAll();
+  if (id === "pages") return;
+  if (S.previewPage !== "index.html") setPreviewPage("index.html");
+  else scrollPreviewTo(PANELS.find((p) => p.id === id).anchor);
+}
+
+/* =====================================================================
+   Live preview
+   ===================================================================== */
+const frame = $("#frame");
+let previewSeq = 0, pendingScroll = null;
+
+function schedulePreview(delay = 350) {
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(refreshPreview, delay);
+}
+
+async function refreshPreview() {
+  const seq = ++previewSeq;
+  try {
+    const html = await api("/api/render", { method: "POST", body: { content: S.content, page: S.previewPage } });
+    if (seq !== previewSeq) return;
+    const win = frame.contentWindow;
+    const doc = frame.contentDocument;
+    if (pendingScroll == null && win && doc?.body) {
+      const track = doc.querySelector(".carousel__track");
+      pendingScroll = { y: win.scrollY, x: track ? track.scrollLeft : 0 };
+    }
+    frame.srcdoc = html;
+  } catch (e) {
+    toast("Preview error: " + e.message, { error: true });
+  }
+}
+
+frame.addEventListener("load", () => {
+  const doc = frame.contentDocument, win = frame.contentWindow;
+  if (!doc?.body) return;
+  doc.head.append(Object.assign(doc.createElement("style"), { textContent: `
+    html { scroll-behavior: auto !important; }
+    [data-edit] { cursor: pointer; }
+    [data-edit]:hover { outline: 2px dashed #40b0bf; outline-offset: -2px; }
+    .news-card[data-edit]:hover { outline-offset: 2px; }
+    .hero__obj[data-edit] { cursor: move; touch-action: none; }
+    .hero__obj.edit-dragging { outline: 2px solid #40b0bf !important; }
+    .edit-guide { position: absolute; z-index: 5; pointer-events: none; }
+    .edit-guide--x { top: 0; bottom: 0; width: 0; border-left: 1px dashed #40b0bf; }
+    .edit-guide--y { left: 0; right: 0; height: 0; border-top: 1px dashed #40b0bf; }
+    .edit-flash { outline: 3px solid #40b0bf !important; outline-offset: 2px; transition: outline-color .6s; }` }));
+
+  // Stop the carousel from auto-advancing while editing.
+  const carousel = doc.querySelector("[data-carousel]");
+  carousel?.dispatchEvent(new Event("mouseenter"));
+
+  // Map preview regions to editor panels.
+  const mark = (sel, fn) => doc.querySelectorAll(sel).forEach((el) => { el.dataset.edit = ""; el.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); fn(el); }); });
+  const visible = S.content.news.items.map((it, i) => [it, i]).filter(([it]) => !it.hidden).map(([, i]) => i);
+  mark(".news-card", (el) => {
+    const idx = visible[[...el.parentElement.children].indexOf(el)];
+    S.panel = "news"; S.openItem = idx; S.filter = ""; renderAll();
+    requestAnimationFrame(() => $(".item.open")?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
+  });
+  mark(".news .section-title", () => showPanel("news"));
+  mark(".about__text, .about__photo", () => showPanel("about"));
+  mark(".contact-card, .contact .section-title", () => showPanel("contact"));
+  enableHeroDragging(doc);
+  mark(".nav__links > li > a, .nav__submenu a, .nav__social a, .nav__brand", () => showPanel("menu"));
+  mark(".coming-soon > div", () => showPanel("pages"));
+  doc.addEventListener("click", (e) => { if (e.target.closest("a")) e.preventDefault(); }, true);
+
+  if (pendingScroll) {
+    win.scrollTo(0, pendingScroll.y);
+    const track = doc.querySelector(".carousel__track");
+    if (track) { track.style.scrollBehavior = "auto"; track.scrollLeft = pendingScroll.x; track.style.scrollBehavior = ""; }
+    pendingScroll = null;
+  }
+});
+
+function scrollPreviewTo(anchor) {
+  const doc = frame.contentDocument;
+  if (!doc?.body) return;
+  if (!anchor) return frame.contentWindow.scrollTo({ top: 0, behavior: "smooth" });
+  const el = doc.getElementById(anchor);
+  if (el) frame.contentWindow.scrollTo({ top: el.getBoundingClientRect().top + frame.contentWindow.scrollY - 80, behavior: "smooth" });
+}
+
+function focusPreviewCard(index) {
+  const doc = frame.contentDocument;
+  if (!doc?.body || S.content.news.items[index]?.hidden) return;
+  const pos = S.content.news.items.slice(0, index).filter((it) => !it.hidden).length;
+  const card = doc.querySelectorAll(".news-card")[pos];
+  if (!card) return;
+  scrollPreviewTo("news-title");
+  const track = card.parentElement;
+  track.scrollTo({ left: card.offsetLeft - track.offsetLeft, behavior: "smooth" });
+  card.classList.add("edit-flash");
+  setTimeout(() => card.classList.remove("edit-flash"), 1200);
+}
+
+function setPreviewPage(file) {
+  S.previewPage = file;
+  $("#previewPage").value = file;
+  pendingScroll = { y: 0, x: 0 };
+  schedulePreview(0);
+}
+
+// Desktop preview renders at a real laptop width and is scaled to fit the pane;
+// mobile renders at phone width inside a frame.
+const DESKTOP_W = 1280, MOBILE_W = 390;
+function layoutPreview() {
+  const stage = $("#stage");
+  const W = stage.clientWidth, H = stage.clientHeight;
+  if (!W || !H) return;
+  if (stage.classList.contains("mobile")) {
+    const scale = Math.min(1, (H - 40) / 800);
+    Object.assign(frame.style, { width: MOBILE_W + "px", height: (H - 40) / scale + "px",
+      transform: `scale(${scale})`, left: (W - MOBILE_W * scale) / 2 + "px", top: "20px" });
+  } else {
+    const scale = Math.min(1, W / DESKTOP_W);
+    Object.assign(frame.style, { width: W / scale + "px", height: H / scale + "px",
+      transform: `scale(${scale})`, left: "0", top: "0" });
+  }
+}
+new ResizeObserver(layoutPreview).observe($("#stage"));
+
+$("#previewPage").addEventListener("change", (e) => setPreviewPage(e.target.value));
+document.querySelectorAll("[data-device]").forEach((b) => b.addEventListener("click", () => {
+  document.querySelectorAll("[data-device]").forEach((x) => x.classList.toggle("on", x === b));
+  $("#stage").classList.toggle("mobile", b.dataset.device === "mobile");
+  layoutPreview();
+}));
+$("#togglePreview").addEventListener("click", () => {
+  const layout = $("#layout");
+  if (matchMedia("(max-width: 1100px)").matches) layout.classList.toggle("show-preview");
+  else layout.classList.toggle("no-preview");
+});
+setTimeout(() => $("#tip").remove(), 6000);
+
+/* =====================================================================
+   Publish
+   ===================================================================== */
+async function openPublish() {
+  if (isDirty()) await save();
+  if (isDirty()) return;
+  let status;
+  try { status = await api("/api/git-status"); }
+  catch (e) { return toast("Couldn't read git status: " + e.message, { error: true }); }
+  if (!status.available) return toast("This folder isn't a git repository, so it can't be published from here.", { error: true, ms: 7000 });
+
+  const close = () => back.remove();
+  const msg = h("input", { class: "input", value: "Update website" });
+  const log = h("pre", { class: "log", hidden: true });
+  const go = h("button", { class: "btn btn--primary", disabled: !status.changes.length }, svg(ICON.upload), "Publish now");
+  go.addEventListener("click", async () => {
+    go.disabled = true; go.textContent = "Publishing…";
+    try {
+      const res = await api("/api/publish", { method: "POST", body: { message: msg.value } });
+      log.hidden = false; log.textContent = res.log;
+      if (res.ok) { go.textContent = "Published"; toast("Published! The live site updates in a minute or two.", { ms: 6000 }); }
+      else { go.textContent = "Failed — see log"; }
+    } catch (e) { log.hidden = false; log.textContent = e.message; go.textContent = "Failed"; }
+  });
+  const back = h("div", { class: "modal-back", onclick: (e) => e.target === back && close() },
+    h("div", { class: "modal" },
+      h("header", {}, h("h2", {}, "Publish to the live website")),
+      h("div", { class: "content" },
+        h("p", { style: { marginTop: 0, color: "var(--ink-2)" } },
+          "This commits your saved changes and pushes them to GitHub (", h("code", {}, status.branch), " → ", h("code", {}, status.remote), "). GitHub Pages then updates the public site."),
+        status.changes.length
+          ? [h("div", { class: "label", style: { fontWeight: 500, fontSize: "13px" } }, `${status.changes.length} changed file(s):`), h("div", { class: "changes" }, status.changes.join("\n").split("\n").map((l) => h("div", {}, l)))]
+          : h("p", { class: "empty", style: { padding: "12px" } }, "Nothing new to publish — everything is already live."),
+        field("Short description of the change", msg),
+        log),
+      h("footer", {}, h("button", { class: "btn", onclick: close }, "Close"), go)));
+  document.body.append(back);
+  msg.select();
+}
+
+/* =====================================================================
+   Wiring
+   ===================================================================== */
+$("#save").addEventListener("click", save);
+$("#discard").addEventListener("click", discard);
+$("#undo").addEventListener("click", undo);
+$("#redo").addEventListener("click", redo);
+$("#publish").addEventListener("click", openPublish);
+
+document.addEventListener("keydown", (e) => {
+  const mod = e.metaKey || e.ctrlKey;
+  if (mod && e.key.toLowerCase() === "s") { e.preventDefault(); save(); return; }
+  if (e.key === "Escape") document.querySelector(".modal-back")?.remove();
+  const editing = e.target.closest("input, textarea, [contenteditable]");
+  if (mod && e.key.toLowerCase() === "z" && !editing) {
+    e.preventDefault();
+    e.shiftKey ? redo() : undo();
+  }
+});
+
+window.addEventListener("beforeunload", (e) => { if (isDirty()) { e.preventDefault(); e.returnValue = ""; } });
+
+(async function init() {
+  try {
+    [S.content, META] = await Promise.all([api("/api/content"), api("/api/meta")]);
+    S.content.theme ??= {};
+  } catch (e) {
+    $("#editor").replaceChildren(h("div", { class: "empty" }, "Couldn't load content: " + e.message,
+      h("br"), "Start the editor with: python3 _editor/editor.py"));
+    return;
+  }
+  S.savedJSON = S.lastSnapshot = JSON.stringify(S.content);
+  if (!Panels[S.panel]) S.panel = "news";
+  $("#previewPage").replaceChildren(
+    h("option", { value: "index.html" }, "Home"),
+    ...S.content.pages.map((p) => h("option", { value: p.file }, p.title)));
+  renderAll();
+  refreshPreview();
+})();
+</script>
+</body>
+</html>

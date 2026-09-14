@@ -1,0 +1,414 @@
+{
+  "site": {
+    "url": "https://leotsukada.github.io/",
+    "title": "Leo Tsukada — Gravitational-Wave Astrophysics",
+    "description": "Leo Tsukada, Postdoctoral Fellow at the Nevada Center for Astrophysics (UNLV) and LIGO Scientific Collaboration member working on gravitational-wave data analysis.",
+    "author": "Leo Tsukada",
+    "logo": "assets/images/lt-logo-1-124x121.png",
+    "favicon": "assets/images/lt-logo-1-124x121.png",
+    "ogImage": "assets/images/bbh_gpt2.png"
+  },
+  "nav": {
+    "links": [
+      {
+        "label": "About Me",
+        "href": "index.html#about",
+        "newTab": false
+      },
+      {
+        "label": "Research",
+        "href": "page1.html",
+        "newTab": false
+      },
+      {
+        "label": "Resume",
+        "href": "assets/files/resume.pdf",
+        "newTab": true
+      },
+      {
+        "label": "Outreach",
+        "href": "page3.html",
+        "newTab": false
+      },
+      {
+        "label": "Blog 🇯🇵",
+        "href": "https://note.com/leo_tsukada/all",
+        "newTab": true
+      }
+    ],
+    "dropdownLabel": "Links",
+    "dropdown": [
+      {
+        "label": "UNLV NCfA",
+        "href": "https://ncfa.physics.unlv.edu/",
+        "icon": ""
+      },
+      {
+        "label": "Penn State IGC",
+        "href": "https://igc.psu.edu/",
+        "icon": ""
+      },
+      {
+        "label": "LIGO",
+        "href": "https://www.ligo.caltech.edu/",
+        "icon": ""
+      },
+      {
+        "label": "YouTube",
+        "href": "https://youtu.be/degD69wnZcY",
+        "icon": "youtube"
+      }
+    ]
+  },
+  "social": [
+    {
+      "icon": "x",
+      "label": "X (Twitter)",
+      "href": "https://x.com/leo_tsukada"
+    },
+    {
+      "icon": "linkedin",
+      "label": "LinkedIn",
+      "href": "https://www.linkedin.com/in/leo-tsukada"
+    },
+    {
+      "icon": "youtube",
+      "label": "YouTube",
+      "href": "https://youtu.be/Y3BkXz6Q2bc"
+    },
+    {
+      "icon": "mail",
+      "label": "Email",
+      "href": "mailto:leo.tsukada@ligo.org"
+    }
+  ],
+  "hero": {
+    "name": "Leo Tsukada",
+    "tagline": "Explore the Universe with Gravitational Waves",
+    "image": "assets/images/bbh_gpt2.png",
+    "credit": "",
+    "positions": {
+      "name": {
+        "x": 6.4,
+        "y": 79.2,
+        "align": "left"
+      },
+      "tagline": {
+        "x": 6.4,
+        "y": 90.9,
+        "align": "left"
+      }
+    }
+  },
+  "news": {
+    "title": "What's new?",
+    "autoplaySeconds": 5,
+    "items": [
+      {
+        "title": "GWTC-5.0 webinar",
+        "date": "2026/07/09",
+        "image": "assets/images/screenshot-2026-07-10-at-22.44.27-573x324.png",
+        "text": "We organized an online webinar to present and discuss the recent GWTC-5.0 papers, \"Overview of GWTC-5.0: Introduction/Methods/Results\". Check out the recording on YouTube.",
+        "link": "https://www.youtube.com/watch?v=b4RkbF2irzw"
+      },
+      {
+        "title": "New paper!",
+        "date": "2026/06/20",
+        "image": "assets/images/screenshot-2026-07-10-at-22.38.04-573x278.png",
+        "text": "We proposed a novel method for a fast targeted GW search using GstLAL pipeline by incorporating information of electromagnetic emission while maintaining a low computational cost.",
+        "link": "https://arxiv.org/pdf/2606.22266"
+      },
+      {
+        "title": "GWTC-5.0 release!",
+        "date": "2026/05/24",
+        "image": "assets/images/screenshot-2026-07-10-at-22.26.45-573x311.png",
+        "text": "I led an editorial team for Gravitational Wave Transient Catalog-5.0 Results paper, and it was released together with public data.",
+        "link": "https://arxiv.org/pdf/2605.27225"
+      },
+      {
+        "title": "Journal publication",
+        "date": "2025/10/06",
+        "image": "assets/images/screenshot-2025-11-02-at-23.19.03-573x177.png",
+        "text": "The paper \"Scalable matched-filtering pipeline for gravitational-wave searches of compact binary mergers\" has been published in Physical Review D.",
+        "link": "https://journals.aps.org/prd/abstract/10.1103/m7bv-c7rm"
+      },
+      {
+        "title": "New paper!",
+        "date": "2025/06/06",
+        "image": "assets/images/screenshot-2025-06-22-at-22.38.25-558x400.png",
+        "text": "We summarized new methods we developed in the GstLAL pipeline for the upcoming Gravitational Wave Transient Catalog (GWTC-4).",
+        "link": "https://arxiv.org/abs/2506.06497"
+      },
+      {
+        "title": "New paper!",
+        "date": "2025/05/29",
+        "image": "assets/images/screenshot-2025-06-22-at-22.37.40-558x202.png",
+        "text": "We introduced a new framework to reuse GstLAL's online search and compared with its offline configuration, paving a way to the new regime of GW CBC searches.",
+        "link": "https://arxiv.org/abs/2505.23959"
+      },
+      {
+        "title": "New paper!",
+        "date": "2024/10/21",
+        "image": "assets/images/screenshot-2025-11-02-at-23.14.21-558x539.png",
+        "text": "We present a scalable gravitational-wave search pipeline (SGNL) which modernizes the GstLAL pipeline with the PyTorch framework, enabling flexible execution on CPUs and GPUs.",
+        "link": "https://arxiv.org/abs/2410.16416"
+      },
+      {
+        "title": "Start a new position!",
+        "date": "2024/09/01",
+        "image": "assets/images/transparent-logo-558x237.png",
+        "text": "I am joining Nevada Center for Astrophysics (NCfA) at University of Nevada, Las Vegas, as a Postdoctoral Fellow.",
+        "link": "https://ncfa.physics.unlv.edu/"
+      },
+      {
+        "title": "Journal publication",
+        "date": "2024/07/29",
+        "image": "assets/images/screenshot-2025-06-22-at-22.34.53-573x160.png",
+        "text": "The paper \"Searching for gravitational-wave signals from precessing black hole binaries with the GstLAL pipeline\" has been published in Physical Review D.",
+        "link": "https://journals.aps.org/prd/abstract/10.1103/PhysRevD.110.023038"
+      },
+      {
+        "title": "New paper!",
+        "date": "2024/03/25",
+        "image": "assets/images/screenshot-2024-03-27-at-14.00.07-558x444.png",
+        "text": "We searched for precessing black hole binaries in the third observing run using the GstLAL detection pipeline. Though we didn't find new events, this shows good promise to make new discoveries in the future.",
+        "link": "https://arxiv.org/abs/2403.17186"
+      },
+      {
+        "title": "Journal publication",
+        "date": "2024/02/26",
+        "image": "assets/images/screenshot-2024-03-16-at-23.33.42-573x186.png",
+        "text": "The paper \"Template bank for compact binary mergers in the fourth observing run of Advanced LIGO, Advanced Virgo, and KAGRA\" has been published in Physical Review D.",
+        "link": "https://journals.aps.org/prd/abstract/10.1103/PhysRevD.108.124042"
+      },
+      {
+        "title": "Journal publication",
+        "date": "2024/02/23",
+        "image": "assets/images/screenshot-2024-03-16-at-23.33.22-573x202.png",
+        "text": "The paper \"Performance of the low-latency GstLAL inspiral search towards LIGO, Virgo, and KAGRA’s fourth observing run\" has been published in Physical Review D.",
+        "link": "https://journals.aps.org/prd/abstract/10.1103/PhysRevD.108.124042"
+      },
+      {
+        "title": "Journal publication",
+        "date": "2023/12/26",
+        "image": "assets/images/screenshot-2024-02-04-at-15.55.21-573x292.png",
+        "text": "The paper \"Rapid localization and inference on compact binary coalescences with the Advanced LIGO-Virgo-KAGRA gravitational-wave detector network\" has been published in Physical Review D.",
+        "link": "https://journals.aps.org/prd/abstract/10.1103/PhysRevD.108.124042"
+      },
+      {
+        "title": "Journal publication",
+        "date": "2023/12/15",
+        "image": "assets/images/screenshot-2023-12-18-at-16.55.33-573x264.png",
+        "text": "The paper \"Extension of the Bayesian searches for anisotropic stochastic gravitational-wave background with nontensorial polarizations\" has been published in Physical Review D.",
+        "link": "https://journals.aps.org/prd/abstract/10.1103/PhysRevD.108.124042"
+      },
+      {
+        "title": "Journal publication",
+        "date": "2023/10/17",
+        "image": "assets/images/screen-shot-2023-10-18-at-19.02.30-702x338.png",
+        "text": "The paper \"Method for removing signal contamination during significance estimation of a GstLAL analysis\" has been published in Physical Review D.",
+        "link": "https://journals.aps.org/prd/abstract/10.1103/PhysRevD.108.084032"
+      },
+      {
+        "title": "New paper!",
+        "date": "2023/08/17",
+        "image": "assets/images/screen-shot-2023-08-20-at-21.44.37-396x233.png",
+        "text": "We extended the Bayesian searches for anisotropic stochastic gravitational-wave background to include non-GR polarizations.",
+        "link": "https://arxiv.org/abs/2308.09020"
+      },
+      {
+        "title": "Journal publication",
+        "date": "2023/08/03",
+        "image": "assets/images/screen-shot-2023-08-05-at-21.12.57-702x370.png",
+        "text": "The paper \"Improved ranking statistics of the GstLAL inspiral search for compact binary coalescences\" has been published in Physical Review D.",
+        "link": "https://journals.aps.org/prd/abstract/10.1103/PhysRevD.108.043004"
+      },
+      {
+        "title": "New paper!",
+        "date": "2023/07/25",
+        "image": "assets/images/screen-shot-2023-08-16-at-23.34.46-396x243.png",
+        "text": "We developed a rapid parameter estimation for GW signals from a compact binary, using the reduced-order-quadrature technique.",
+        "link": "https://arxiv.org/abs/2307.13380"
+      },
+      {
+        "title": "Journal publication",
+        "date": "2023/07/14",
+        "image": "assets/images/screen-shot-2023-08-20-at-21.42.06-702x380.png",
+        "text": "The paper \"pygwb: A Python-based Library for Gravitational-wave Background Searches\" has been published in The Astrophysical Journal.",
+        "link": "https://iopscience.iop.org/article/10.3847/1538-4357/acd775"
+      },
+      {
+        "title": "New blog post 🇯🇵",
+        "date": "2023/07/03",
+        "image": "assets/images/screen-shot-2023-07-03-at-19.08.00-800x381.png",
+        "text": "ブログ記事を投稿しました。<br><br>Assistant Research Professorになりました",
+        "link": "https://note.com/leo_tsukada/n/n9445a22df3c3"
+      },
+      {
+        "title": "New paper!",
+        "date": "2023/05/29",
+        "image": "assets/images/screen-shot-2023-06-19-at-17.15.18-396x251.png",
+        "text": "We developed a tool to remove contamination due to GW signals leaking into the background model of GstLAL.",
+        "link": "https://arxiv.org/abs/2305.18233"
+      },
+      {
+        "title": "New paper!",
+        "date": "2023/05/10",
+        "image": "assets/images/screen-shot-2023-05-21-at-12.07.54-396x284.png",
+        "text": "We improved the detection algorithm of the GstLAL search pipeline towards the LVK's fourth observing run, leading to the 20% increased sensitivity to GW signals.",
+        "link": "https://arxiv.org/abs/2305.06286"
+      },
+      {
+        "title": "New paper!",
+        "date": "2023/05/09",
+        "image": "assets/images/screen-shot-2023-05-21-at-12.05.17-396x194.png",
+        "text": "We summarized the performance of the GstLAL search pipeline during a mock-data campaign as a preparation for the LVK's fourth observing run.",
+        "link": "https://arxiv.org/abs/2305.05625"
+      },
+      {
+        "title": "New paper!",
+        "date": "2023/04/28",
+        "image": "assets/images/screen-shot-2023-05-21-at-12.04.57-396x251.png",
+        "text": "We developed a formalism to unify the information about the signal probability of a GW event across multiple search pipelines.",
+        "link": "https://arxiv.org/abs/2305.00071"
+      },
+      {
+        "title": "New paper!",
+        "date": "2023/03/28",
+        "image": "assets/images/pygwb-logo-plasma-1-407x340.png",
+        "text": "We developed a Python-based library for isotropic gravitational-wave background search, \"pygwb\".",
+        "link": "https://arxiv.org/abs/2303.15696"
+      },
+      {
+        "title": "New blog post 🇯🇵",
+        "date": "2023/02/01",
+        "image": "assets/images/img-1398-800x600.jpg",
+        "text": "ブログ記事を投稿しました。<br><br>宇宙飛行士選抜試験を振り返って",
+        "link": "https://note.com/leo_tsukada/n/n2ac126273dba"
+      },
+      {
+        "title": "Journal publication",
+        "date": "2023/01/30",
+        "image": "assets/images/screen-shot-2023-02-02-at-18.19.05-702x387.png",
+        "text": "The paper \"Bayesian formalism for parameter inference of anisotropic stochastic gravitational wave background\" has been published in Physical Review D.",
+        "link": "https://journals.aps.org/prd/abstract/10.1103/PhysRevD.107.023024"
+      },
+      {
+        "title": "New paper!",
+        "date": "2022/11/30",
+        "image": "assets/images/screen-shot-2022-12-10-at-23.50.28-800x477.png",
+        "text": "We summarized the specification and new development of GstLAL's template bank toward the LVK's fourth observing run.",
+        "link": "https://arxiv.org/abs/2211.16674"
+      },
+      {
+        "title": "Media coverage",
+        "date": "2022/11/10",
+        "image": "assets/images/img-c3070807ed7f-1-800x306.jpg",
+        "text": "I gave an informal talk about black holes, gravitational waves, and LIGO in the podcast \"バイリンガルニュース\".",
+        "link": "https://twitter.com/bilingual_news/status/1590627219701116928?s=46&t=h12NYLHjPyK9mDN2JpudKQ"
+      },
+      {
+        "title": "New blog post 🇯🇵",
+        "date": "2022/10/09",
+        "image": "assets/images/screen-shot-2022-10-31-at-0.54.51-800x380.png",
+        "text": "ブログ記事を投稿しました。<br><br>アメリカ大学院全不合格体験記<br>(挫折編)・その2",
+        "link": "https://note.com/leo_tsukada/n/n6c973429acd5"
+      },
+      {
+        "title": "Got a new position!",
+        "date": "2022/09/01",
+        "image": "assets/images/download-2-300x168.png",
+        "text": "I am pleased to announce that recently I have got promoted as Assistant Research Professor in the LIGO group at Penn State.",
+        "link": "https://igc.psu.edu/people/bio/lqt5311/"
+      },
+      {
+        "title": "New paper!",
+        "date": "2022/08/30",
+        "image": "assets/images/screen-shot-2022-11-01-at-1.38.27-702x486.png",
+        "text": "We developed a Bayesian formalism for parameter inference of anisotropic stochastic gravitational wave background.",
+        "link": "https://arxiv.org/abs/2208.14421"
+      },
+      {
+        "title": "New blog post 🇯🇵",
+        "date": "2022/08/30",
+        "image": "assets/images/screen-shot-2022-10-31-at-0.53.41-800x377.png",
+        "text": "ブログ記事を投稿しました。<br><br>アメリカ大学院全不合格体験記<br>(挫折編)・その1",
+        "link": "https://note.com/leo_tsukada/n/na6882dd727af"
+      },
+      {
+        "title": "New blog post 🇯🇵",
+        "date": "2021/08/30",
+        "image": "assets/images/rectangle-large-type-2-ee4f100b3311441044b2b10901e81c9a.webp",
+        "text": "ブログ記事を投稿しました。<br><br>なぜ重力波を研究しようと思ったのか。(修行編)",
+        "link": "https://note.com/leo_tsukada/n/n8a2e04197e5e"
+      },
+      {
+        "title": "Gave an invited talk",
+        "date": "2022/04/11",
+        "image": "assets/images/download-290x174.png",
+        "text": "I was invited to APS April meeting to talk about \"Observation of neutron stars during LIGO-Virgo-KAGRA's observing runs\".",
+        "link": "https://meetings.aps.org/Meeting/APR22/Session/Q04.2"
+      },
+      {
+        "title": "New blog post 🇯🇵",
+        "date": "2021/11/07",
+        "image": "assets/images/rectangle-large-type-2-75dc8df741b3d000f70d2d5d036140a3.webp",
+        "text": "ブログ記事を投稿しました。<br><br>なぜ重力波を研究しようと思ったのか。(立志編)",
+        "link": "https://note.com/leo_tsukada/n/nd69ceb2dd765"
+      },
+      {
+        "title": "New blog post 🇯🇵",
+        "date": "2021/10/03",
+        "image": "assets/images/rectangle-large-type-2-01ea7a29d3e6d872d74390626d147eb5.webp",
+        "text": "ブログ記事を投稿しました。<br><br>大規模コラボレーションで研究してるとよくあること(後編)",
+        "link": "https://note.com/leo_tsukada/n/n7f05bd9d6476"
+      },
+      {
+        "title": "New blog post 🇯🇵",
+        "date": "2021/08/14",
+        "image": "assets/images/rectangle-large-type-2-fa6a19360641113cc42f1e08a7aa815a.webp",
+        "text": "新しい記事を投稿しました。<br><br>大規模コラボレーションで研究してるとよくあること (前編)",
+        "link": "https://note.com/leo_tsukada/n/n49fb136238e1"
+      },
+      {
+        "title": "Launched a blog! 🇯🇵",
+        "date": "2021/07/25",
+        "image": "assets/images/rectangle-large-type-2-3ef980afae38b591b4f4e029094594b2.webp",
+        "text": "noteにてブログを始めました。<br>研究や、海外生活、過去の経験などを綴りたいと思います。<br>よければフォローをお願いします。",
+        "link": "https://note.com/leo_tsukada"
+      },
+      {
+        "title": "We found NSBHs!",
+        "date": "2021/07/01",
+        "image": "assets/images/bhnsmerger-schematic-2021-sm-500x340.jpg",
+        "text": "For the first time, LIGO and Virgo scientific collaboration discovered gravitational signals from two mergers of neutron-star black-hole binaries!!",
+        "link": "https://www.ligo.org/detections/NSBH2020.php"
+      }
+    ]
+  },
+  "about": {
+    "title": "About Me",
+    "photo": "assets/images/4p9a3856-752x1000.jpg",
+    "photoAlt": "Portrait of Leo Tsukada",
+    "body": "<p>I am Leo Tsukada, a Postdoctoral Fellow in the <a href=\"https://ncfa.physics.unlv.edu/\" target=\"_blank\" rel=\"noopener\">Nevada Center for Astrophysics</a> at the University of Nevada, Las Vegas (UNLV). Previously, I was an Assistant Research Professor in the <a href=\"https://igc.psu.edu/\" target=\"_blank\" rel=\"noopener\">Institute for Gravitation and the Cosmos</a> at the Pennsylvania State University. I received my Ph.D. in Physics from the University of Tokyo (<a href=\"http://www.resceu.s.u-tokyo.ac.jp/top_en.php\" target=\"_blank\" rel=\"noopener\">RESCEU</a>). I am also a member of the LIGO Scientific Collaboration, and my research interest is mainly in the data analysis of gravitational waves.</p><p>In particular, I have been interested in two kinds of gravitational-wave signals: the low-latency detection of gravitational waves from compact binary coalescences, and the stochastic gravitational-wave background. Please visit the <a href=\"page1.html\">Research</a> page for more details.</p><p>I work closely with a LIGO group led by <a href=\"https://ncfa.physics.unlv.edu/people/63152de87e39b6d80b37198b\" target=\"_blank\" rel=\"noopener\">Prof. Carl-Johan Haster</a> at UNLV, where we work on various projects related to gravitational-wave detection and inference.</p>"
+  },
+  "contact": {
+    "title": "Contact",
+    "email": "leo.tsukada@ligo.org",
+    "office": "BPB - 202\n4505 S. Maryland Pkwy.\nLas Vegas, NV 89154"
+  },
+  "pages": [
+    {
+      "file": "page1.html",
+      "title": "Research",
+      "heading": "Coming soon...",
+      "message": "The Research page is under construction."
+    },
+    {
+      "file": "page3.html",
+      "title": "Outreach",
+      "heading": "Coming soon...",
+      "message": "The Outreach page is under construction."
+    }
+  ]
+}
