@@ -338,6 +338,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--no-browser", action="store_true")
+    parser.add_argument("--url-file", help="write the editor's URL to this file once it is serving (used by the Mac app)")
     args = parser.parse_args()
 
     server = None
@@ -352,6 +353,8 @@ def main():
 
     url = f"http://localhost:{server.server_address[1]}/_editor/editor.html"
     print(f"Website editor running at {url}\nPress Ctrl+C to stop.")
+    if args.url_file:
+        Path(args.url_file).write_text(url + "\n", encoding="utf-8")
     if not args.no_browser:
         webbrowser.open(url)
     try:

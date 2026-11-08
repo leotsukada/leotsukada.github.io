@@ -4,7 +4,19 @@ A local app for editing the site without touching HTML.
 
 ## Start it
 
-Double-click **`Open Editor.command`** in Finder, or run:
+**As a Mac app (recommended).** Build it once:
+
+```sh
+bash _editor/make_app.sh
+```
+
+This creates `~/Applications/Website Editor.app` (outside this folder, so it is never published).
+Open it, then right-click its Dock icon → Options → Keep in Dock. Clicking the icon starts the
+editor and opens it in your browser; clicking it again while running brings the tab back;
+⌘Q (or Dock → Quit) stops the editor. Its log is `~/Library/Logs/Website Editor.log`.
+Re-run the script if you move this folder.
+
+**Or** double-click **`Open Editor.command`** in Finder, or run:
 
 ```sh
 python3 _editor/editor.py
