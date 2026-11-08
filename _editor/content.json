@@ -404,7 +404,7 @@
     "title": "About Me",
     "photo": "assets/images/4p9a3856-752x1000.jpg",
     "photoAlt": "Portrait of Leo Tsukada",
-    "body": "<p>I am Leo Tsukada, a Postdoctoral Research Associate in the <a href=\"https://cgca.uwm.edu/\" target=\"_blank\" rel=\"noopener\">Leonard E Parker Center for Gravitation, Cosmology &amp; Astrophysics</a> at University of Wisconsin-Milwaukee (UWM). Previously, I was a Postdoctoral Fellow in the Nevada Center for Astrophysics at the University of Nevada, Las Vegas, and an Assistant Research Professor in the <a href=\"https://igc.psu.edu/\" target=\"_blank\" rel=\"noopener\">Institute for Gravitation and the Cosmos</a> at the Pennsylvania State University. I received my Ph.D. in Physics from the University of Tokyo (<a href=\"http://www.resceu.s.u-tokyo.ac.jp/top_en.php\" target=\"_blank\" rel=\"noopener\">RESCEU</a>). I am also a member of the LIGO Scientific Collaboration, and my research interest is mainly in the data analysis of gravitational waves.</p><p>In particular, I have been interested in two kinds of gravitational-wave signals: the low-latency detection of gravitational waves from compact binary coalescences, and the stochastic gravitational-wave background. Please visit the <a href=\"page1.html\">Research</a> page for more details.</p><p>I work closely with a LIGO group led by Prof. Jolien Creighton and Prof. Patrick Brady at UWM, where we work on various projects related to gravitational-wave detection and inference.</p>"
+    "body": "<p>I am Leo Tsukada, a Postdoctoral Research Associate in the <a href=\"https://cgca.uwm.edu/\" target=\"_blank\" rel=\"noopener\">Leonard E Parker Center for Gravitation, Cosmology &amp; Astrophysics</a> at University of Wisconsin-Milwaukee (UWM). Previously, I was a Postdoctoral Fellow in the Nevada Center for Astrophysics at the University of Nevada, Las Vegas, and an Assistant Research Professor in the <a href=\"https://igc.psu.edu/\" target=\"_blank\" rel=\"noopener\">Institute for Gravitation and the Cosmos</a> at the Pennsylvania State University. I received my Ph.D. in Physics from the University of Tokyo (<a href=\"http://www.resceu.s.u-tokyo.ac.jp/top_en.php\" target=\"_blank\" rel=\"noopener\">RESCEU</a>). I am also a member of the LIGO Scientific Collaboration, and my research interest is mainly in the data analysis of gravitational waves.</p><p>In particular, I have been interested in two kinds of gravitational-wave signals: the low-latency detection of gravitational waves from compact binary coalescences, and the stochastic gravitational-wave background. Please visit the <a href=\"research.html\">Research</a> page for more details.</p><p>I work closely with a LIGO group led by Prof. Jolien Creighton and Prof. Patrick Brady at UWM, where we work on various projects related to gravitational-wave detection and inference.</p>"
   },
   "contact": {
     "title": "Contact",
@@ -413,7 +413,7 @@
   },
   "pages": [
     {
-      "file": "page1.html",
+      "file": "research.html",
       "title": "Research",
       "heading": "Research",
       "message": "",
@@ -558,7 +558,7 @@
       "headerImage": "assets/images/chatgpt-20image-202026-e5-b9-b49-e6-9c-8814-e6-97-a5-2021-41.png"
     },
     {
-      "file": "page3.html",
+      "file": "outreach.html",
       "title": "Outreach",
       "heading": "Coming soon...",
       "message": "The Outreach page is under construction."

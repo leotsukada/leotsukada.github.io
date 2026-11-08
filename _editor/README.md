@@ -33,8 +33,11 @@ Only Python 3 is needed; there is nothing to install.
      unsaved edits and hand-made pages like `page2.html` — can't be deleted. Renaming updates the
      editor's pages automatically, but is refused if a hand-made page, CSS or JS file uses the image.
    - *About Me*, *Contact*, *Menu & social*, *Sub pages*, *Site settings*.
-2. **Save** (⌘S) regenerates `index.html`, `page1.html` and `page3.html`.
-3. **Publish…** commits the saved changes and runs `git push`, so GitHub Pages updates the live site.
+2. **Save** (⌘S) regenerates `index.html`, `research.html` and `outreach.html`
+   (`page1.html` / `page3.html` only redirect old links to them).
+3. **Publish…** commits *every* change in the folder (new, edited and deleted files — the dialog lists them)
+   and runs `git push`, so GitHub Pages updates the live site. If an earlier push failed, it is retried.
+   Keep files that shouldn't go online out of the repo with `.gitignore`.
 
 Undo/redo (⌘Z / ⇧⌘Z) works for everything since the editor was opened.
 

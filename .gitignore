@@ -1,4 +1,6 @@
 index.html*
 !index.html
 .DS_Store
-Icon?%__pycache__/
+Icon?
+__pycache__/
+*.pyc

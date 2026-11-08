@@ -405,6 +405,9 @@ async function api(path, { method = "GET", body, headers = {} } = {}) {
   const res = await fetch(path, opts);
   const type = res.headers.get("Content-Type") || "";
   const data = type.includes("json") ? await res.json() : await res.text();
+  if (res.status === 404 && path.startsWith("/api/"))
+    // editor.html is always served fresh, but the Python server only picks up new features on restart
+    throw new Error("the editor server is out of date — quit it (Ctrl+C in its terminal) and start the editor again");
   if (!res.ok) throw new Error(data.error || data || res.statusText);
   return data;
 }
@@ -562,7 +565,7 @@ function rich(obj, key, { block = false, oninput } = {}) {
     e.preventDefault();
     const sel = window.getSelection();
     const range = sel.rangeCount && area.contains(sel.anchorNode) ? sel.getRangeAt(0).cloneRange() : null;
-    const url = prompt("Link address (https://…, mailto:…, or a page like page1.html)", "https://");
+    const url = prompt("Link address (https://…, mailto:…, or a page like research.html)", "https://");
     if (!url || url === "https://") return;
     area.focus();
     if (range) { sel.removeAllRanges(); sel.addRange(range); }
@@ -708,6 +711,43 @@ function panelHead(title, desc, ...actions) {
   return h("div", { class: "panel-head" },
     h("div", {}, h("h1", {}, title), desc && h("p", {}, desc)),
     actions.length ? h("div", { class: "actions" }, actions) : null);
+}
+
+/* Resume: upload a PDF and it replaces assets/files/resume.pdf right away. */
+function resumeCard() {
+  const info = h("div", { class: "hint", style: { marginTop: 0 } }, "Checking current file…");
+  const showInfo = (r) => {
+    info.replaceChildren(r.exists
+      ? h("span", {}, "Current file: ", h("a", { href: `/${r.path}?t=${r.mtime}`, target: "_blank", rel: "noopener" }, r.path),
+          ` · ${(r.size / 1024).toFixed(0)} KB · updated ${new Date(r.mtime * 1000).toLocaleString()}`)
+      : h("span", {}, "No resume uploaded yet (", h("code", {}, r.path), ")."));
+  };
+  api("/api/resume").then(showInfo).catch((e) => { info.textContent = "Could not read the current file: " + e.message; });
+
+  const upload = async (files) => {
+    const file = [...files].find((f) => f.type === "application/pdf" || /\.pdf$/i.test(f.name));
+    if (!file) return toast("Please choose a PDF file.", { error: true });
+    updateStatus("Uploading resume…");
+    try {
+      showInfo(await api("/api/upload-resume", { method: "POST", body: file }));
+      toast("Resume replaced — Publish to put it on the live site.");
+    } catch (e) { toast("Upload failed: " + e.message, { error: true }); }
+    finally { updateStatus(); }
+  };
+  const fileInput = h("input", { type: "file", accept: "application/pdf,.pdf", hidden: true, onchange: (e) => { upload(e.target.files); e.target.value = ""; } });
+  const drop = h("div", { class: "imgdrop", style: { marginBottom: "8px" } },
+    h("p", { style: { margin: "0 0 8px" } }, "Drop your new resume PDF here, or"),
+    h("button", { class: "btn btn--sm btn--primary", type: "button", onclick: () => fileInput.click() }, svg(ICON.upload), "Upload new resume (PDF)…"),
+    fileInput);
+  drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("drag"); });
+  drop.addEventListener("dragleave", () => drop.classList.remove("drag"));
+  drop.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove("drag"); upload(e.dataTransfer.files); });
+
+  return h("div", { class: "card" },
+    h("h3", {}, "Resume"),
+    drop, info,
+    h("div", { class: "hint" }, "The upload replaces ", h("code", {}, "assets/files/resume.pdf"),
+      " immediately (the menu's Resume link points there). Click Publish to update the live site."));
 }
 
 const Panels = {
@@ -951,7 +991,7 @@ const Panels = {
         h("h3", {}, "Menu links"),
         listEditor(nav.links, [
           { label: "Label", render: input("label", "Label") },
-          { label: "Link", width: "1.6fr", render: input("href", "page1.html or https://…") },
+          { label: "Link", width: "1.6fr", render: input("href", "research.html or https://…") },
           { label: "New tab", width: "64px", render: newTab },
         ], { newItem: () => ({ label: "New link", href: "https://", newTab: true }), addLabel: "Add menu link" }),
         h("div", { class: "hint" }, "Tip: link to a file like assets/files/resume.pdf, a section like index.html#about, or any web address.")),
@@ -985,9 +1025,7 @@ const Panels = {
           h("button", { class: "btn btn--sm", onclick: () => setBrandColors(true) }, "Use brand colors"),
           h("button", { class: "btn btn--sm btn--ghost", onclick: () => setBrandColors(false) }, "Same color for all"),
           h("button", { class: "btn btn--sm btn--ghost", onclick: () => showPanel("colors") }, "More color settings…"))),
-      h("div", { class: "card" },
-        h("h3", {}, "Resume"),
-        h("p", { style: { margin: "0 0 8px", color: "var(--ink-2)" } }, "To update your resume, replace the file ", h("code", {}, "assets/files/resume.pdf"), " with the new PDF (same name), then Publish.")),
+      resumeCard(),
     ];
   },
 
@@ -1753,7 +1791,7 @@ async function openPublish() {
   const close = () => back.remove();
   const msg = h("input", { class: "input", value: "Update website" });
   const log = h("pre", { class: "log", hidden: true });
-  const go = h("button", { class: "btn btn--primary", disabled: !status.changes.length }, svg(ICON.upload), "Publish now");
+  const go = h("button", { class: "btn btn--primary", disabled: !status.changes.length && !status.unpushed }, svg(ICON.upload), "Publish now");
   go.addEventListener("click", async () => {
     go.disabled = true; go.textContent = "Publishing…";
     try {
@@ -1769,9 +1807,11 @@ async function openPublish() {
       h("div", { class: "content" },
         h("p", { style: { marginTop: 0, color: "var(--ink-2)" } },
           "This commits your saved changes and pushes them to GitHub (", h("code", {}, status.branch), " → ", h("code", {}, status.remote), "). GitHub Pages then updates the public site."),
+        status.unpushed > 0 && h("p", { style: { margin: "0 0 8px", color: "var(--danger)" } },
+          `${status.unpushed} earlier publish${status.unpushed > 1 ? "es haven't" : " hasn't"} reached GitHub yet (the push failed). Publishing will send ${status.unpushed > 1 ? "them" : "it"} too.`),
         status.changes.length
           ? [h("div", { class: "label", style: { fontWeight: 500, fontSize: "13px" } }, `${status.changes.length} changed file(s):`), h("div", { class: "changes" }, status.changes.join("\n").split("\n").map((l) => h("div", {}, l)))]
-          : h("p", { class: "empty", style: { padding: "12px" } }, "Nothing new to publish — everything is already live."),
+          : !status.unpushed && h("p", { class: "empty", style: { padding: "12px" } }, "Nothing new to publish — everything is already live."),
         field("Short description of the change", msg),
         log),
       h("footer", {}, h("button", { class: "btn", onclick: close }, "Close"), go)));

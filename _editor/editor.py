@@ -26,10 +26,12 @@ import build  # noqa: E402
 
 ROOT = build.ROOT
 IMAGE_DIR = ROOT / "assets" / "images"
+RESUME_FILE = ROOT / "assets" / "files" / "resume.pdf"
 IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"}
 MAX_UPLOAD = 25 * 1024 * 1024
-# What "Publish" stages. Everything the editor can change lives under these.
-PUBLISH_PATHS = ["index.html", "assets", "_editor/content.json"]
+# "Publish" stages every change in the repository (new, edited and deleted files),
+# so pages renamed or removed by hand and editor updates aren't left behind.
+# Keep things that shouldn't go live out of the repo with .gitignore.
 
 
 def git(*args: str) -> subprocess.CompletedProcess:
@@ -37,9 +39,10 @@ def git(*args: str) -> subprocess.CompletedProcess:
 
 
 def _usage_sources() -> list[Path]:
-    """Files that can reference an image: the saved content, every page at the site
-    root (including ones the editor doesn't manage) and the site's CSS/JS."""
-    return [build.CONTENT_FILE, *sorted(ROOT.glob("*.html")),
+    """Files that can reference an image: the saved content, the editor's own page
+    (its logo), every page at the site root (including ones the editor doesn't
+    manage) and the site's CSS/JS."""
+    return [build.CONTENT_FILE, build.EDITOR_DIR / "editor.html", *sorted(ROOT.glob("*.html")),
             *sorted((ROOT / "assets").rglob("*.css")), *sorted((ROOT / "assets").rglob("*.js"))]
 
 
@@ -159,6 +162,8 @@ class Handler(SimpleHTTPRequestHandler):
                         reverse=True,
                     )
                     return self._json([f"assets/images/{p.name}" for p in files])
+                if path == "/api/resume":
+                    return self._json(self._resume_info())
                 if path == "/api/images/details":
                     return self._json(self._image_details())
                 if path == "/api/git-status":
@@ -186,6 +191,8 @@ class Handler(SimpleHTTPRequestHandler):
                 return self._json({"ok": True, "content": content, "written": written})
             if path == "/api/upload":
                 return self._json(self._upload())
+            if path == "/api/upload-resume":
+                return self._json(self._upload_resume())
             if path == "/api/delete-images":
                 return self._json(self._delete_images(self._read_json()))
             if path == "/api/rename-image":
@@ -215,6 +222,23 @@ class Handler(SimpleHTTPRequestHandler):
         IMAGE_DIR.mkdir(parents=True, exist_ok=True)
         target.write_bytes(data)
         return {"path": f"assets/images/{target.name}"}
+
+    def _resume_info(self):
+        if not RESUME_FILE.is_file():
+            return {"exists": False, "path": "assets/files/resume.pdf"}
+        st = RESUME_FILE.stat()
+        return {"exists": True, "path": "assets/files/resume.pdf", "size": st.st_size, "mtime": st.st_mtime}
+
+    def _upload_resume(self):
+        """Replace assets/files/resume.pdf with the uploaded PDF (written atomically)."""
+        data = self._body()
+        if not data.startswith(b"%PDF-"):
+            raise ValueError("That file isn't a PDF.")
+        RESUME_FILE.parent.mkdir(parents=True, exist_ok=True)
+        tmp = RESUME_FILE.with_name(".resume.pdf.uploading")
+        tmp.write_bytes(data)
+        tmp.replace(RESUME_FILE)
+        return self._resume_info()
 
     def _image_details(self):
         files = sorted((p for p in IMAGE_DIR.iterdir() if p.is_file() and p.suffix.lower() in IMAGE_EXTS),
@@ -275,7 +299,7 @@ class Handler(SimpleHTTPRequestHandler):
     def _git_status(self):
         if git("rev-parse", "--is-inside-work-tree").returncode != 0:
             return {"available": False}
-        status = git("status", "--porcelain", "--", *PUBLISH_PATHS, *[p["file"] for p in build.load_content()["pages"]])
+        status = git("status", "--porcelain", "--untracked-files=all")
         branch = git("rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
         remote = git("remote", "get-url", "origin").stdout.strip()
         return {
@@ -283,12 +307,17 @@ class Handler(SimpleHTTPRequestHandler):
             "branch": branch,
             "remote": remote,
             "changes": [line for line in status.stdout.splitlines() if line.strip()],
+            "unpushed": self._unpushed(),
         }
+
+    @staticmethod
+    def _unpushed() -> int:
+        """Commits on this branch that haven't reached GitHub yet (e.g. a push that failed)."""
+        r = git("rev-list", "--count", "@{upstream}..HEAD")
+        return int(r.stdout.strip()) if r.returncode == 0 and r.stdout.strip().isdigit() else 0
 
     def _publish(self, data):
         message = (data.get("message") or "").strip() or "Update website"
-        paths = PUBLISH_PATHS + [p["file"] for p in build.load_content()["pages"]]
-        paths = [p for p in paths if (ROOT / p).exists()]
         log = []
 
         def run(*args):
@@ -296,14 +325,14 @@ class Handler(SimpleHTTPRequestHandler):
             log.append(f"$ git {' '.join(args)}\n{result.stdout}{result.stderr}".rstrip())
             return result
 
-        run("add", "--", *paths)
-        if run("diff", "--cached", "--quiet").returncode == 0:
+        run("add", "--all")
+        if run("diff", "--cached", "--quiet").returncode != 0:
+            if run("commit", "-m", message).returncode != 0:
+                return {"ok": False, "log": "\n\n".join(log)}
+        elif not self._unpushed():
             return {"ok": True, "log": "\n\n".join(log + ["Nothing new to publish."])}
-        if run("commit", "-m", message).returncode != 0:
-            return {"ok": False, "log": "\n\n".join(log)}
         pushed = run("push")
         return {"ok": pushed.returncode == 0, "log": "\n\n".join(log)}
-
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
