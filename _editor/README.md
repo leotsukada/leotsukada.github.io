@@ -27,6 +27,11 @@ Only Python 3 is needed; there is nothing to install.
    - *Colors*: menu bar text and background, social icons (X, LinkedIn…), hero text,
      section titles, footer and the accent color. Empty = default; a note warns if text becomes hard to read.
      Each social icon can also have its own color in *Menu & social* ("Use brand colors" sets the official ones).
+   - *Images*: every file in `assets/images`. Upload several at once (button, drag & drop or ⌘V),
+     filter by name or Used/Unused, preview, copy a path, rename, and select several
+     (shift-click for a range) to delete them together. Images still used anywhere — including
+     unsaved edits and hand-made pages like `page2.html` — can't be deleted. Renaming updates the
+     editor's pages automatically, but is refused if a hand-made page, CSS or JS file uses the image.
    - *About Me*, *Contact*, *Menu & social*, *Sub pages*, *Site settings*.
 2. **Save** (⌘S) regenerates `index.html`, `page1.html` and `page3.html`.
 3. **Publish…** commits the saved changes and runs `git push`, so GitHub Pages updates the live site.

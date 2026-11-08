@@ -36,6 +36,57 @@ def git(*args: str) -> subprocess.CompletedProcess:
     return subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True, timeout=120)
 
 
+def _usage_sources() -> list[Path]:
+    """Files that can reference an image: the saved content, every page at the site
+    root (including ones the editor doesn't manage) and the site's CSS/JS."""
+    return [build.CONTENT_FILE, *sorted(ROOT.glob("*.html")),
+            *sorted((ROOT / "assets").rglob("*.css")), *sorted((ROOT / "assets").rglob("*.js"))]
+
+
+def _name_pattern(name: str) -> re.Pattern:
+    return re.compile(r"(?<![\w.-])" + re.escape(name) + r"(?![\w.-])")
+
+
+def image_usages(names: list[str], draft: dict | None = None) -> dict[str, list[str]]:
+    """Map each image file name to the places that reference it."""
+    texts = []
+    if draft is not None:
+        texts.append(("unsaved editor changes", json.dumps(draft, ensure_ascii=False)))
+    for f in _usage_sources():
+        try:
+            texts.append((str(f.relative_to(ROOT)), f.read_text(encoding="utf-8", errors="ignore")))
+        except OSError:
+            pass
+    out = {}
+    for name in names:
+        pat = _name_pattern(name)
+        out[name] = [label for label, text in texts if name in text and pat.search(text)]
+    return out
+
+
+def image_file(rel: str) -> Path:
+    """Resolve "assets/images/<name>" to an existing image file, or raise."""
+    m = re.fullmatch(r"assets/images/([^/\\]+)", str(rel or ""))
+    if not m:
+        raise ValueError("Only files directly in assets/images can be changed.")
+    target = (IMAGE_DIR / m.group(1)).resolve()
+    if target.parent != IMAGE_DIR.resolve() or target.suffix.lower() not in IMAGE_EXTS:
+        raise ValueError(f"{rel} is not an image in assets/images.")
+    if not target.is_file():
+        raise ValueError(f"{rel} does not exist.")
+    return target
+
+
+def _replace_strings(obj, old: str, new: str):
+    if isinstance(obj, str):
+        return obj.replace(old, new)
+    if isinstance(obj, list):
+        return [_replace_strings(x, old, new) for x in obj]
+    if isinstance(obj, dict):
+        return {k: _replace_strings(v, old, new) for k, v in obj.items()}
+    return obj
+
+
 class Handler(SimpleHTTPRequestHandler):
     server_version = "SiteEditor/1.0"
 
@@ -108,6 +159,8 @@ class Handler(SimpleHTTPRequestHandler):
                         reverse=True,
                     )
                     return self._json([f"assets/images/{p.name}" for p in files])
+                if path == "/api/images/details":
+                    return self._json(self._image_details())
                 if path == "/api/git-status":
                     return self._json(self._git_status())
             except Exception as exc:  # surface errors in the UI
@@ -133,6 +186,10 @@ class Handler(SimpleHTTPRequestHandler):
                 return self._json({"ok": True, "content": content, "written": written})
             if path == "/api/upload":
                 return self._json(self._upload())
+            if path == "/api/delete-images":
+                return self._json(self._delete_images(self._read_json()))
+            if path == "/api/rename-image":
+                return self._json(self._rename_image(self._read_json()))
             if path == "/api/publish":
                 return self._json(self._publish(self._read_json()))
         except Exception as exc:
@@ -158,6 +215,62 @@ class Handler(SimpleHTTPRequestHandler):
         IMAGE_DIR.mkdir(parents=True, exist_ok=True)
         target.write_bytes(data)
         return {"path": f"assets/images/{target.name}"}
+
+    def _image_details(self):
+        files = sorted((p for p in IMAGE_DIR.iterdir() if p.is_file() and p.suffix.lower() in IMAGE_EXTS),
+                       key=lambda p: p.stat().st_mtime, reverse=True)
+        usage = image_usages([p.name for p in files])
+        return [{"path": f"assets/images/{p.name}", "name": p.name, "size": p.stat().st_size,
+                 "mtime": p.stat().st_mtime, "usedIn": usage[p.name]} for p in files]
+
+    def _delete_images(self, data: dict):
+        """Delete files in assets/images, skipping any that something still uses."""
+        targets, errors = [], []
+        for rel in data.get("paths") or []:
+            try:
+                targets.append((rel, image_file(rel)))
+            except ValueError as exc:
+                errors.append({"path": rel, "error": str(exc)})
+        usage = image_usages([t.name for _, t in targets], data.get("content"))
+        deleted, blocked = [], []
+        for rel, target in targets:
+            if usage[target.name]:
+                blocked.append({"path": rel, "usedIn": usage[target.name]})
+                continue
+            try:
+                target.unlink()
+                deleted.append(rel)
+            except OSError as exc:
+                errors.append({"path": rel, "error": str(exc)})
+        return {"deleted": deleted, "blocked": blocked, "errors": errors}
+
+    def _rename_image(self, data: dict):
+        """Rename an image and update the editor's saved content to match.
+
+        Refuses when the image is referenced anywhere the editor can't rewrite
+        (hand-made pages, CSS, JS). Generated pages are rebuilt afterwards."""
+        target = image_file(data.get("path"))
+        raw = Path(str(data.get("newName") or "")).name
+        stem = re.sub(r"[^a-z0-9]+", "-", Path(raw).stem.lower()).strip("-")[:80]
+        if not stem:
+            raise ValueError("Enter a new file name.")
+        new = target.with_name(stem + target.suffix.lower())
+        if new.name == target.name:
+            return {"path": f"assets/images/{new.name}", "unchanged": True}
+        if new.exists():
+            raise ValueError(f"{new.name} already exists.")
+        saved = build.load_content()
+        managed = {"_editor/content.json", *build.page_files(saved)}
+        elsewhere = [u for u in image_usages([target.name])[target.name] if u not in managed]
+        if elsewhere:
+            return {"ok": False, "usedIn": elsewhere}
+        old_rel, new_rel = f"assets/images/{target.name}", f"assets/images/{new.name}"
+        target.rename(new)
+        updated = _replace_strings(saved, old_rel, new_rel)
+        if updated != saved:
+            build.build(updated)
+            build.save_content(updated)
+        return {"ok": True, "old": old_rel, "path": new_rel}
 
     def _git_status(self):
         if git("rev-parse", "--is-inside-work-tree").returncode != 0:

@@ -225,8 +225,14 @@
   .modal .content { padding: 18px; }
   .modal footer { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 18px; border-top: 1px solid var(--line); }
   .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
-  .gallery button { padding: 0; border: 2px solid transparent; border-radius: 7px; background: #eceff2; cursor: pointer; overflow: hidden; }
-  .gallery button:hover { border-color: var(--accent-2); }
+  .gallery__item { position: relative; }
+  .gallery .pick { display: block; width: 100%; padding: 0; border: 2px solid transparent; border-radius: 7px; background: #eceff2; cursor: pointer; overflow: hidden; }
+  .gallery .pick:hover { border-color: var(--accent-2); }
+  .gallery .del { position: absolute; top: 5px; right: 5px; display: grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 6px; background: rgb(255 255 255 / .92); color: #b42318; cursor: pointer; opacity: 0; box-shadow: 0 1px 3px rgb(0 0 0 / .25); transition: opacity .15s; }
+  .gallery .del svg { width: 15px; height: 15px; }
+  .gallery__item:hover .del, .gallery .del:focus-visible { opacity: 1; }
+  .gallery .del:hover { background: #b42318; color: #fff; }
+  @media (hover: none) { .gallery .del { opacity: 1; } }
   .gallery img { display: block; width: 100%; height: 86px; object-fit: cover; }
   .gallery span { display: block; padding: 4px 6px; font-size: 11px; color: var(--ink-2); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; background: #fff; }
   pre.log { max-height: 240px; overflow: auto; padding: 10px; background: #1d2126; color: #e6e6e6; border-radius: 7px; font-size: 12px; white-space: pre-wrap; }
@@ -238,6 +244,27 @@
   .toast button { background: none; border: 0; color: var(--accent-2); font-weight: 600; cursor: pointer; padding: 0; }
   @keyframes rise { from { transform: translateY(8px); opacity: 0; } }
 
+  /* Images panel */
+  .imgbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .imgbar .input { flex: 1 1 160px; min-width: 0; }
+  .imgbar select { height: 30px; }
+  .imgsel { position: sticky; top: -1px; z-index: 2; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 10px; margin-bottom: 10px; background: var(--accent-soft); border-radius: 8px; font-size: 13px; }
+  .imgsel .spacer { flex: 1; }
+  .imgdrop { padding: 14px; margin-bottom: 12px; border: 2px dashed var(--line); border-radius: var(--radius); text-align: center; color: var(--muted); font-size: 13px; }
+  .imgdrop.drag { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  .imglist { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); overflow: hidden; }
+  .imgrow { display: grid; grid-template-columns: 22px 64px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 10px; border-top: 1px solid var(--line); }
+  .imgrow:first-child { border-top: 0; }
+  .imgrow.sel { background: var(--accent-soft); }
+  .imgrow input[type=checkbox] { width: 16px; height: 16px; margin: 0; cursor: pointer; }
+  .imgrow__thumb { width: 64px; height: 48px; border-radius: 5px; background: #eceff2 center / contain no-repeat; cursor: zoom-in; border: 0; padding: 0; }
+  .imgrow__name { font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .imgrow__meta { margin-top: 2px; font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+  .imgrow__actions { display: flex; gap: 2px; }
+  .badge { display: inline-block; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+  .badge--used { background: #e7f4ee; color: #146c43; cursor: help; }
+  .badge--unused { background: #f1f3f5; color: var(--muted); }
+  .imgpreview img { display: block; max-width: 100%; max-height: 70vh; margin: 0 auto; }
   .empty { padding: 40px 20px; text-align: center; color: var(--muted); }
   .loading { display: grid; place-items: center; height: 100%; color: var(--muted); }
 
@@ -300,6 +327,12 @@ const S = {
   lastSnapshot: "",
   previewPage: "index.html",
   images: null,
+  imageDetails: null, // [{path, name, size, mtime, usedIn}] for the Images panel
+  imgSel: new Set(),  // selected paths in the Images panel
+  imgView: { q: "", show: "all", sort: "new" },
+  imgLast: null,      // last clicked row, for shift-click ranges
+  imgDims: {},        // "path+mtime" -> "W×H"
+
 };
 
 const PANELS = [
@@ -309,6 +342,7 @@ const PANELS = [
   { id: "hero",    label: "Header & hero",   icon: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="m3 16 5-5 4 4 3-3 6 6"/>', anchor: null },
   { id: "colors",  label: "Colors",          icon: '<circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2a10 10 0 0 0 0 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.3A5.7 5.7 0 0 0 22 9.8C22 5.5 17.5 2 12 2z"/>', anchor: null },
   { id: "menu",    label: "Menu & social",   icon: '<path d="M4 6h16M4 12h16M4 18h10"/>', anchor: null },
+  { id: "images",  label: "Images",          icon: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>', anchor: null },
   { id: "pages",   label: "Sub pages",       icon: '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/>', anchor: null },
   { id: "site",    label: "Site settings",   icon: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>', anchor: null },
 ];
@@ -553,6 +587,7 @@ async function uploadFile(file) {
   try {
     const res = await api("/api/upload", { method: "POST", body: file, headers: { "X-Filename": encodeURIComponent(name).replace(/%/g, "_") } });
     S.images = null;
+    S.imageDetails = null;
     return res.path;
   } finally { updateStatus(); }
 }
@@ -609,8 +644,11 @@ async function pickImage(onPick) {
   const paint = () => {
     grid.replaceChildren(...S.images
       .filter((p) => p.toLowerCase().includes(search.value.toLowerCase()))
-      .map((p) => h("button", { type: "button", title: p, onclick: () => { onPick(p); close(); } },
-        h("img", { src: "/" + p, loading: "lazy", alt: "" }), h("span", {}, p.split("/").pop()))));
+      .map((p) => h("div", { class: "gallery__item" },
+        h("button", { class: "pick", type: "button", title: p, onclick: () => { onPick(p); close(); } },
+          h("img", { src: "/" + p, loading: "lazy", alt: "" }), h("span", {}, p.split("/").pop())),
+        h("button", { class: "del", type: "button", title: "Delete this image file", "aria-label": `Delete ${p.split("/").pop()}`,
+          onclick: () => deleteImage(p, paint) }, svg(ICON.trash)))));
   };
   search.addEventListener("input", paint);
   const back = h("div", { class: "modal-back", onclick: (e) => e.target === back && close() },
@@ -620,6 +658,26 @@ async function pickImage(onPick) {
   paint();
   document.body.append(back);
   search.focus();
+}
+
+/* Permanently delete an image file. The server refuses while anything uses it. */
+async function deleteImage(p, repaint) {
+  const name = p.split("/").pop();
+  if (!confirm(`Delete “${name}” from assets/images?\n\nThe file is removed from disk. If it was committed to git, it can only be recovered from git history.`)) return;
+  try {
+    const res = await api("/api/delete-images", { method: "POST", body: { paths: [p], content: S.content } });
+    if (res.blocked.length) {
+      alert(`“${name}” is still in use, so it was not deleted:\n\n• ${res.blocked[0].usedIn.join("\n• ")}\n\nRemove it from those places (and Save) first.`);
+      return;
+    }
+    if (res.errors.length) throw new Error(res.errors[0].error);
+    S.images = S.images.filter((x) => x !== p);
+    S.imageDetails = null;
+    repaint();
+    toast(`Deleted “${name}”`);
+  } catch (err) {
+    alert(`Could not delete “${name}”: ${err.message}`);
+  }
 }
 
 /* generic editable list (menu links, social icons, pages…) */
@@ -933,17 +991,239 @@ const Panels = {
     ];
   },
 
+  images() {
+    if (!S.imageDetails) {
+      if (!S.imgLoading) {
+        S.imgLoading = true;
+        api("/api/images/details").then((d) => { S.imageDetails = d; if (S.panel === "images") renderAll(); })
+          .catch((e) => toast("Could not load images: " + e.message, { error: true }))
+          .finally(() => { S.imgLoading = false; });
+      }
+      return [panelHead("Images", "Every file in assets/images."), h("div", { class: "empty" }, "Loading images…")];
+    }
+    const V = S.imgView;
+    const draft = JSON.stringify(S.content);
+    // Where each image is used: saved website files (from the server) plus the
+    // editor's unsaved draft. Matches what the server checks before deleting.
+    const usage = (img) => draft.includes(img.path) && !img.usedIn.includes("_editor/content.json")
+      ? ["unsaved editor changes", ...img.usedIn] : img.usedIn;
+    for (const p of [...S.imgSel]) if (!S.imageDetails.some((i) => i.path === p)) S.imgSel.delete(p);
+
+    const q = V.q.toLowerCase();
+    let items = S.imageDetails.map((i) => ({ ...i, uses: usage(i) }))
+      .filter((i) => i.name.toLowerCase().includes(q))
+      .filter((i) => V.show === "all" || (V.show === "unused") === (i.uses.length === 0));
+    const by = { new: (a, b) => b.mtime - a.mtime, old: (a, b) => a.mtime - b.mtime,
+                 name: (a, b) => a.name.localeCompare(b.name), size: (a, b) => b.size - a.size };
+    items.sort(by[V.sort]);
+
+    const reload = () => { S.imageDetails = null; S.images = null; renderAll(); };
+    const repaint = () => renderPanel();
+
+    // ---- upload (button, drop, paste)
+    const upload = async (files) => {
+      const imgs = [...files].filter((f) => f.type.startsWith("image/"));
+      if (!imgs.length) return toast("No images found — try PNG, JPG, WebP, GIF or SVG.", { error: true });
+      let ok = 0;
+      for (const f of imgs) {
+        try { await uploadFile(f); ok++; } catch (e) { toast(`${f.name}: ${e.message}`, { error: true }); }
+      }
+      if (ok) toast(`Uploaded ${ok} image${ok > 1 ? "s" : ""}`);
+      reload();
+    };
+    const fileInput = h("input", { type: "file", accept: "image/*", multiple: true, hidden: true, onchange: (e) => upload(e.target.files) });
+    const drop = h("div", { class: "imgdrop", tabindex: "0" }, "Drop images here, or click here and paste a screenshot (⌘V)");
+    drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("drag"); });
+    drop.addEventListener("dragleave", () => drop.classList.remove("drag"));
+    drop.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove("drag"); upload(e.dataTransfer.files); });
+    drop.addEventListener("paste", (e) => { if (e.clipboardData.files.length) { e.preventDefault(); upload(e.clipboardData.files); } });
+
+    // ---- delete
+    const remove = async (paths) => {
+      const unused = paths.filter((p) => !usage(S.imageDetails.find((i) => i.path === p)).length);
+      const inUse = paths.length - unused.length;
+      if (!unused.length) return alert("All selected images are in use, so none can be deleted. Remove them from the site (and Save) first.");
+      const names = unused.map((p) => "• " + p.split("/").pop());
+      const list = names.length > 12 ? [...names.slice(0, 12), `…and ${names.length - 12} more`] : names;
+      if (!confirm(`Delete ${unused.length} image file${unused.length > 1 ? "s" : ""}?` +
+        (inUse ? ` (${inUse} in-use image${inUse > 1 ? "s" : ""} will be skipped.)` : "") +
+        `\n\n${list.join("\n")}\n\nFiles are removed from disk. Committed files can only be recovered from git history.`)) return;
+      try {
+        const res = await api("/api/delete-images", { method: "POST", body: { paths: unused, content: S.content } });
+        res.deleted.forEach((p) => S.imgSel.delete(p));
+        const msg = [`Deleted ${res.deleted.length}`];
+        if (res.blocked.length) msg.push(`${res.blocked.length} in use, skipped`);
+        if (res.errors.length) msg.push(`${res.errors.length} failed`);
+        toast(msg.join(" · "), { error: !!(res.blocked.length || res.errors.length) });
+      } catch (e) { toast("Delete failed: " + e.message, { error: true }); }
+      reload();
+    };
+
+    // ---- rename
+    const rename = async (img) => {
+      const stem = img.name.replace(/\.[^.]+$/, "");
+      const next = prompt(`Rename “${img.name}” to (extension is kept):`, stem);
+      if (next == null || next.trim() === "" || next.trim() === stem) return;
+      if (isDirty() && !confirm("Renaming saves the new file name into the website files. Your other unsaved changes stay unsaved. Continue?")) return;
+      try {
+        const res = await api("/api/rename-image", { method: "POST", body: { path: img.path, newName: next } });
+        if (res.ok === false) return alert(`“${img.name}” is used in files the editor can't update, so it was not renamed:\n\n• ${res.usedIn.join("\n• ")}`);
+        if (res.unchanged) return;
+        // keep the draft and the "saved" baseline in step with the server
+        const swap = (json) => json.split(JSON.stringify(res.old).slice(1, -1)).join(JSON.stringify(res.path).slice(1, -1));
+        S.content = JSON.parse(swap(JSON.stringify(S.content)));
+        S.savedJSON = swap(S.savedJSON);
+        S.lastSnapshot = JSON.stringify(S.content);
+        if (S.imgSel.delete(res.old)) S.imgSel.add(res.path);
+        toast(`Renamed to ${res.path.split("/").pop()}`);
+        changed({ structural: true });
+      } catch (e) { toast("Rename failed: " + e.message, { error: true }); }
+      reload();
+    };
+
+    const preview = (img) => {
+      const close = () => back.remove();
+      const back = h("div", { class: "modal-back", onclick: (e) => e.target === back && close() },
+        h("div", { class: "modal" },
+          h("header", {}, h("h2", {}, img.name), h("div", { class: "spacer" }), h("button", { class: "btn btn--ghost", onclick: close }, "Close")),
+          h("div", { class: "content imgpreview" }, h("img", { src: "/" + img.path + "?t=" + img.mtime, alt: "" }))));
+      document.body.append(back);
+    };
+    const copyPath = async (img) => {
+      try { await navigator.clipboard.writeText(img.path); toast("Path copied"); }
+      catch { prompt("Copy the path:", img.path); }
+    };
+
+    // ---- rows
+    const toggle = (img, on, shift) => {
+      const a = items.findIndex((i) => i.path === S.imgLast);
+      if (shift && a >= 0) {
+        const b = items.findIndex((i) => i.path === img.path);
+        items.slice(Math.min(a, b), Math.max(a, b) + 1).forEach((i) => on ? S.imgSel.add(i.path) : S.imgSel.delete(i.path));
+      } else on ? S.imgSel.add(img.path) : S.imgSel.delete(img.path);
+      S.imgLast = img.path;
+      repaint();
+    };
+    const fmtSize = (n) => n < 1024 ? `${n} B` : n < 1048576 ? `${(n / 1024).toFixed(0)} KB` : `${(n / 1048576).toFixed(1)} MB`;
+    const fmtDate = (t) => new Date(t * 1000).toISOString().slice(0, 10);
+    const rows = items.map((img) => {
+      const key = img.path + img.mtime;
+      const dims = h("span", {}, S.imgDims[key] || "");
+      if (!S.imgDims[key]) {
+        const probe = new Image();
+        probe.onload = () => { if (probe.naturalWidth) dims.textContent = S.imgDims[key] = `${probe.naturalWidth}×${probe.naturalHeight}`; };
+        probe.src = "/" + img.path + "?t=" + img.mtime;
+      }
+      const sel = S.imgSel.has(img.path);
+      return h("div", { class: "imgrow" + (sel ? " sel" : "") },
+        h("input", { type: "checkbox", checked: sel, "aria-label": `Select ${img.name}`,
+          onclick: (e) => toggle(img, e.target.checked, e.shiftKey) }),
+        h("button", { class: "imgrow__thumb", type: "button", title: "Preview", style: { backgroundImage: `url("/${img.path}?t=${img.mtime}")` }, onclick: () => preview(img) }),
+        h("div", { style: { minWidth: 0 } },
+          h("div", { class: "imgrow__name", title: img.path }, img.name),
+          h("div", { class: "imgrow__meta" },
+            img.uses.length
+              ? h("span", { class: "badge badge--used", title: "Used in:\n" + img.uses.join("\n") }, `Used · ${img.uses.length}`)
+              : h("span", { class: "badge badge--unused" }, "Unused"),
+            dims, h("span", {}, fmtSize(img.size)), h("span", {}, fmtDate(img.mtime)))),
+        h("div", { class: "imgrow__actions" },
+          h("button", { class: "btn btn--ghost btn--icon", title: "Copy path", onclick: () => copyPath(img) }, svg(ICON.copy)),
+          h("button", { class: "btn btn--ghost btn--icon", title: "Rename", onclick: () => rename(img) }, "✎"),
+          h("button", { class: "btn btn--ghost btn--icon btn--danger", title: img.uses.length ? "In use — can't delete" : "Delete",
+            disabled: img.uses.length > 0, onclick: () => remove([img.path]) }, svg(ICON.trash))));
+    });
+
+    // ---- toolbar + selection bar
+    const search = h("input", { class: "input", placeholder: "Filter by file name…", value: V.q });
+    search.addEventListener("input", () => { V.q = search.value; repaint(); setTimeout(() => { const el = $(".imgbar .input"); el?.focus(); el?.setSelectionRange(V.q.length, V.q.length); }); });
+    const seg = (key, opts) => h("div", { class: "seg" }, opts.map(([v, label]) =>
+      h("button", { class: V[key] === v ? "on" : "", type: "button", onclick: () => { V[key] = v; repaint(); } }, label)));
+    const sortSel = h("select", { class: "input", style: { flex: "0 0 auto", width: "auto" }, onchange: (e) => { V.sort = e.target.value; repaint(); } },
+      [["new", "Newest"], ["old", "Oldest"], ["name", "Name"], ["size", "Largest"]].map(([v, l]) => h("option", { value: v, selected: V.sort === v }, l)));
+
+    const visible = items.map((i) => i.path);
+    const allOn = visible.length > 0 && visible.every((p) => S.imgSel.has(p));
+    const selected = [...S.imgSel];
+    const selUnused = selected.filter((p) => { const i = S.imageDetails.find((x) => x.path === p); return i && !usage(i).length; });
+    const unusedCount = S.imageDetails.filter((i) => !usage(i).length).length;
+
+    const selbar = h("div", { class: "imgsel" },
+      h("label", { style: { display: "flex", gap: "6px", alignItems: "center", cursor: "pointer" } },
+        h("input", { type: "checkbox", checked: allOn, onclick: () => { visible.forEach((p) => allOn ? S.imgSel.delete(p) : S.imgSel.add(p)); repaint(); } }),
+        selected.length ? `${selected.length} selected` : "Select all shown"),
+      h("div", { class: "spacer" }),
+      selected.length > 0 && h("button", { class: "btn btn--sm btn--ghost", onclick: () => { S.imgSel.clear(); repaint(); } }, "Clear"),
+      h("button", { class: "btn btn--sm btn--danger", disabled: !selUnused.length, onclick: () => remove(selected),
+        title: selected.length && !selUnused.length ? "All selected images are in use" : "" },
+        svg(ICON.trash), selected.length ? `Delete ${selUnused.length}${selUnused.length < selected.length ? ` (${selected.length - selUnused.length} in use)` : ""}` : "Delete"));
+
+    return [
+      panelHead("Images", `${S.imageDetails.length} files in assets/images · ${unusedCount} unused`,
+        h("button", { class: "btn", title: "Reload the list from disk", onclick: reload }, "Refresh"),
+        h("button", { class: "btn btn--primary", onclick: () => fileInput.click() }, svg(ICON.upload), "Upload…")),
+      drop, fileInput,
+      h("div", { class: "imgbar" }, search, seg("show", [["all", "All"], ["used", "Used"], ["unused", "Unused"]]), sortSel),
+      selbar,
+      items.length ? h("div", { class: "imglist" }, rows) : h("div", { class: "empty" }, S.imageDetails.length ? "No images match." : "No images yet."),
+      h("div", { class: "hint", style: { marginTop: "10px" } },
+        "Shift-click checkboxes to select a range. Images still used somewhere on the site (including unsaved edits) can't be deleted. ",
+        "Renaming updates the editor's pages automatically, but is refused if a hand-made page, CSS or JS file uses the image."),
+    ];
+  },
+
   pages() {
+    const newSection = () => ({ title: "New topic", period: "", place: "", body: "", papers: [], image: "", imageAlt: "", caption: "", source: "", sourceHref: "" });
+    const sectionCard = (p, sec, i) => {
+      const arr = p.sections;
+      const redraw = () => { changed({ structural: true }); renderPanel(); };
+      return h("div", { class: "card", style: sec.hidden ? { opacity: ".6" } : null },
+        h("div", { style: { display: "flex", alignItems: "center", gap: "6px" } },
+          h("h3", { style: { margin: 0, flex: 1 } }, `${i + 1}. ${sec.title || "(untitled)"}`),
+          h("button", { class: "btn btn--ghost btn--icon", title: "Move up", disabled: i === 0, onclick: () => { move(arr, i, i - 1); redraw(); } }, svg(ICON.up)),
+          h("button", { class: "btn btn--ghost btn--icon", title: "Move down", disabled: i === arr.length - 1, onclick: () => { move(arr, i, i + 1); redraw(); } }, svg(ICON.down)),
+          h("button", { class: "btn btn--ghost btn--icon btn--danger", title: "Delete section", onclick: () => {
+            arr.splice(i, 1); redraw(); toast("Section deleted", { action: "Undo", onAction: undo });
+          } }, svg(ICON.trash))),
+        toggle(sec, "hidden", "Show on the page", { invert: true, onchange: renderPanel }),
+        field("Title", text(sec, "title")),
+        h("div", { class: "row" },
+          field("Period", text(sec, "period", { placeholder: "2024–present" })),
+          field("Where", text(sec, "place", { placeholder: "UNLV" }))),
+        field("Description", rich(sec, "body", { block: true })),
+        field("Key papers", listEditor(sec.papers || (sec.papers = []), [
+          { label: "Citation", render: (row) => text(row, "label") },
+          { label: "Link", render: (row) => text(row, "href", { placeholder: "https://arxiv.org/abs/…" }) },
+        ], { newItem: () => ({ label: "", href: "https://arxiv.org/abs/" }), addLabel: "Add paper" })),
+        field("Figure", imageField(sec, "image"), "A figure from one of the papers. Click it on the site to open it at full size."),
+        field("Caption", text(sec, "caption", { multiline: true, rows: 2 })),
+        h("div", { class: "row" },
+          field("Figure source", text(sec, "source", { placeholder: "Tsukada et al. 2023" })),
+          field("Source link", text(sec, "sourceHref", { placeholder: "https://arxiv.org/abs/…" }))),
+        field("Image description (for screen readers)", text(sec, "imageAlt", { placeholder: "Uses the caption if empty" })));
+    };
     return [
       panelHead("Sub pages", "The Research and Outreach pages."),
-      ...S.content.pages.map((p) => h("div", { class: "card" },
-        h("h3", {}, `${p.title} · ${p.file}`),
-        h("div", { class: "row" },
-          field("Page name (browser tab)", text(p, "title")),
-          field("Heading", text(p, "heading"))),
-        field("Message", text(p, "message", { multiline: true, rows: 2 })),
-        field("Search engine description", text(p, "description", { placeholder: "Optional" })),
-        h("button", { class: "btn btn--sm", onclick: () => setPreviewPage(p.file) }, svg(ICON.eye), "Preview this page"))),
+      ...S.content.pages.flatMap((p) => {
+        const hasSections = (p.sections || []).length > 0;
+        const addSection = () => { (p.sections ||= []).push(newSection()); changed({ structural: true }); renderPanel(); };
+        return [
+          h("div", { class: "card" },
+            h("h3", {}, `${p.title} · ${p.file}`),
+            h("div", { class: "row" },
+              field("Page name (browser tab)", text(p, "title")),
+              field("Heading", text(p, "heading"))),
+            hasSections
+              ? field("Introduction", rich(p, "intro", { block: true }), "Shown under the heading, above the list of topics.")
+              : field("Message", text(p, "message", { multiline: true, rows: 2 }), "Shown on the \"Coming soon\" screen. Add a section to turn this into a full page."),
+            field("Header background image", imageField(p, "headerImage"), "Shown behind the page heading, darkened so the text stays readable. Leave empty for the plain dark header."),
+            field("Search engine description", text(p, "description", { placeholder: "Optional" })),
+            h("div", { style: { display: "flex", gap: "8px", flexWrap: "wrap" } },
+              h("button", { class: "btn btn--sm", onclick: () => setPreviewPage(p.file) }, svg(ICON.eye), "Preview this page"),
+              !hasSections && h("button", { class: "btn btn--sm", onclick: addSection }, svg(ICON.plus), "Add a section"))),
+          ...(hasSections ? p.sections.map((sec, i) => sectionCard(p, sec, i)) : []),
+          hasSections && h("button", { class: "btn btn--primary", style: { marginBottom: "16px" }, onclick: addSection }, svg(ICON.plus), `Add section to ${p.title}`),
+        ].filter(Boolean);
+      }),
     ];
   },
 
@@ -956,7 +1236,9 @@ const Panels = {
         field("Description", text(s, "description", { multiline: true, rows: 3 }), "One or two sentences for search engines and link previews."),
         field("Your name", text(s, "author"), "Used in the footer and page titles."),
         field("Website address", text(s, "url", { type: "url" })),
-        field("Link preview image", imageField(s, "ogImage"), "Shown when the site is shared on social media.")),
+        field("Link preview image", imageField(s, "ogImage"), "Shown when the site is shared on social media."),
+        field("Google Analytics measurement ID", text(s, "gaMeasurementId", { placeholder: "G-XXXXXXXXXX" }),
+          "From Google Analytics → Admin → Data streams. Leave empty to turn tracking off. Visits are counted only on the live site, not in this preview.")),
     ];
   },
 };
@@ -1297,7 +1579,8 @@ function renderSidebar() {
   $("#sidebar").replaceChildren(
     h("h2", {}, "Sections"),
     ...PANELS.map((p) => h("button", { class: "navbtn" + (S.panel === p.id ? " active" : ""), onclick: () => showPanel(p.id) },
-      svg(p.icon), p.label, p.id === "news" && h("span", { class: "count", id: "count-news" }, S.content.news.items.length))),
+      svg(p.icon), p.label, p.id === "news" && h("span", { class: "count", id: "count-news" }, S.content.news.items.length),
+      p.id === "images" && S.imageDetails && h("span", { class: "count" }, S.imageDetails.length))),
     h("div", { class: "help" },
       h("div", {}, h("b", {}, "1. Edit"), " — changes show in the preview instantly."),
       h("div", {}, h("b", {}, "2. Save"), " (⌘S) — writes the website files."),

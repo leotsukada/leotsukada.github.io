@@ -1,12 +1,13 @@
 {
   "site": {
     "url": "https://leotsukada.github.io/",
-    "title": "Leo Tsukada — Gravitational-Wave Astrophysics",
-    "description": "Leo Tsukada, Postdoctoral Fellow at the Nevada Center for Astrophysics (UNLV) and LIGO Scientific Collaboration member working on gravitational-wave data analysis.",
+    "title": "Leo Tsukada — Gravitational-Wave Astrophysist",
+    "description": "Leo Tsukada, Postdoctoral Research Associate in the Leonard E Parker Center for Gravitation, Cosmology & Astrophysics at University of Wisconsin-Milwaukee, and LIGO Scientific Collaboration member working on gravitational-wave data analysis.",
     "author": "Leo Tsukada",
-    "logo": "assets/images/lt-logo-1-124x121.png",
-    "favicon": "assets/images/lt-logo-1-124x121.png",
-    "ogImage": "assets/images/bbh_gpt2.png"
+    "logo": "assets/images/chatgpt-20image-202026-e5-b9-b49-e6-9c-8814-e6-97-a5-2021-45-2.png",
+    "favicon": "assets/images/chatgpt-20image-202026-e5-b9-b49-e6-9c-8814-e6-97-a5-2021-45-2.png",
+    "ogImage": "assets/images/chatgpt-20image-202026-e5-b9-b49-e6-9c-8814-e6-97-a5-2021-41.png",
+    "gaMeasurementId": "G-VW767N2RHR"
   },
   "nav": {
     "links": [
@@ -38,6 +39,11 @@
     ],
     "dropdownLabel": "Links",
     "dropdown": [
+      {
+        "label": "UWM CGCA",
+        "href": "https://cgca.uwm.edu/contact.html",
+        "icon": ""
+      },
       {
         "label": "UNLV NCfA",
         "href": "https://ncfa.physics.unlv.edu/",
@@ -85,7 +91,7 @@
   "hero": {
     "name": "Leo Tsukada",
     "tagline": "Explore the Universe with Gravitational Waves",
-    "image": "assets/images/bbh_gpt2.png",
+    "image": "assets/images/chatgpt-20image-202026-e5-b9-b49-e6-9c-8814-e6-97-a5-2021-41.png",
     "credit": "",
     "positions": {
       "name": {
@@ -104,6 +110,14 @@
     "title": "What's new?",
     "autoplaySeconds": 5,
     "items": [
+      {
+        "title": "Start a new position!",
+        "date": "2026/11/01",
+        "image": "assets/images/images.png",
+        "text": "I am joining the Leonard E Parker Center for Gravitation, Cosmology &amp; Astrophysics (CGCA) at University of Wisconsin-Milwaukee as a Postdoctoral Research Associate.",
+        "link": "https://cgca.uwm.edu/",
+        "hidden": false
+      },
       {
         "title": "GWTC-5.0 webinar",
         "date": "2026/07/09",
@@ -390,19 +404,158 @@
     "title": "About Me",
     "photo": "assets/images/4p9a3856-752x1000.jpg",
     "photoAlt": "Portrait of Leo Tsukada",
-    "body": "<p>I am Leo Tsukada, a Postdoctoral Fellow in the <a href=\"https://ncfa.physics.unlv.edu/\" target=\"_blank\" rel=\"noopener\">Nevada Center for Astrophysics</a> at the University of Nevada, Las Vegas (UNLV). Previously, I was an Assistant Research Professor in the <a href=\"https://igc.psu.edu/\" target=\"_blank\" rel=\"noopener\">Institute for Gravitation and the Cosmos</a> at the Pennsylvania State University. I received my Ph.D. in Physics from the University of Tokyo (<a href=\"http://www.resceu.s.u-tokyo.ac.jp/top_en.php\" target=\"_blank\" rel=\"noopener\">RESCEU</a>). I am also a member of the LIGO Scientific Collaboration, and my research interest is mainly in the data analysis of gravitational waves.</p><p>In particular, I have been interested in two kinds of gravitational-wave signals: the low-latency detection of gravitational waves from compact binary coalescences, and the stochastic gravitational-wave background. Please visit the <a href=\"page1.html\">Research</a> page for more details.</p><p>I work closely with a LIGO group led by <a href=\"https://ncfa.physics.unlv.edu/people/63152de87e39b6d80b37198b\" target=\"_blank\" rel=\"noopener\">Prof. Carl-Johan Haster</a> at UNLV, where we work on various projects related to gravitational-wave detection and inference.</p>"
+    "body": "<p>I am Leo Tsukada, a Postdoctoral Research Associate in the <a href=\"https://cgca.uwm.edu/\" target=\"_blank\" rel=\"noopener\">Leonard E Parker Center for Gravitation, Cosmology &amp; Astrophysics</a> at University of Wisconsin-Milwaukee (UWM). Previously, I was a Postdoctoral Fellow in the Nevada Center for Astrophysics at the University of Nevada, Las Vegas, and an Assistant Research Professor in the <a href=\"https://igc.psu.edu/\" target=\"_blank\" rel=\"noopener\">Institute for Gravitation and the Cosmos</a> at the Pennsylvania State University. I received my Ph.D. in Physics from the University of Tokyo (<a href=\"http://www.resceu.s.u-tokyo.ac.jp/top_en.php\" target=\"_blank\" rel=\"noopener\">RESCEU</a>). I am also a member of the LIGO Scientific Collaboration, and my research interest is mainly in the data analysis of gravitational waves.</p><p>In particular, I have been interested in two kinds of gravitational-wave signals: the low-latency detection of gravitational waves from compact binary coalescences, and the stochastic gravitational-wave background. Please visit the <a href=\"page1.html\">Research</a> page for more details.</p><p>I work closely with a LIGO group led by Prof. Jolien Creighton and Prof. Patrick Brady at UWM, where we work on various projects related to gravitational-wave detection and inference.</p>"
   },
   "contact": {
     "title": "Contact",
     "email": "leo.tsukada@ligo.org",
-    "office": "BPB - 202\n4505 S. Maryland Pkwy.\nLas Vegas, NV 89154"
+    "office": "Kenwood Interdisciplinary Research Complex\n3135 North Maryland Ave\nMilwaukee, Wisconsin 53211"
   },
   "pages": [
     {
       "file": "page1.html",
       "title": "Research",
-      "heading": "Coming soon...",
-      "message": "The Research page is under construction."
+      "heading": "Research",
+      "message": "",
+      "description": "Leo Tsukada's research in gravitational-wave astrophysics: the LVK transient catalogs, targeted multi-messenger searches, real-time detection with GstLAL and SGNL, the statistics of GW detections, anisotropic stochastic backgrounds and ultralight bosons.",
+      "intro": "<p>I study gravitational waves, the ripples in spacetime produced by merging black holes and neutron stars, as a member of the LIGO Scientific Collaboration. My work spans finding these signals within seconds of arrival, cataloging them, and searching for faint signals hidden below the usual detection threshold, where new astrophysics and new physics may be waiting.</p>",
+      "sections": [
+        {
+          "title": "Gravitational-wave transient catalogs",
+          "period": "2024–present",
+          "place": "",
+          "body": "<p>The Gravitational-Wave Transient Catalogs (GWTC) are the LIGO–Virgo–KAGRA Collaboration's official record of every confident compact-binary merger. I help manage the catalogs for the fourth observing run (O4): I co-chair the GWTC working group in the collaboration and am the editorial chair of the <strong>GWTC-5.0</strong> results paper, which reports the candidates up to the second part of O4 (O4b).</p>",
+          "papers": [
+            {
+              "label": "LVK, GWTC-5.0: Results from the second part of O4 (2026)",
+              "href": "https://arxiv.org/abs/2605.27225"
+            },
+            {
+              "label": "LVK, GWTC-4.0: Results from the first part of O4 (2025)",
+              "href": "https://arxiv.org/abs/2508.18082"
+            }
+          ],
+          "image": "assets/images/research/gwtc5-masses.jpg",
+          "imageAlt": "Credible-region contours of primary versus secondary mass for O4b gravitational-wave candidates",
+          "caption": "Primary and secondary masses of the O4b candidates in GWTC-5.0, with selected events highlighted.",
+          "source": "GWTC-5.0 (arXiv:2605.27225)",
+          "sourceHref": "https://arxiv.org/abs/2605.27225"
+        },
+        {
+          "title": "Targeted searches for multi-messenger follow-up",
+          "period": "2024–present",
+          "place": "",
+          "body": "<p>As the GW170817 discovery demonstrated, the primary route to multi-messenger observation is to issue a public alert and point electromagnetic telescopes at the inferred sky location. However, the inverse approach is equally possible: short gamma-ray bursts and other electromagnetic transients tell us where and when to look for preceding GW signals. I am developing a targeted mode of the GW search pipeline that folds the sky position and time of an external trigger into its likelihood-ratio ranking statistic. This recovers weaker GW signals that an all-sky search would miss, while keeping false alarms under control, and enables rapid follow-up of electromagnetic transients.</p>",
+          "papers": [
+            {
+              "label": "Tsukada et al., Fast targeted gravitational-wave follow-up search with GstLAL (2026)",
+              "href": "https://arxiv.org/abs/2606.22266"
+            }
+          ],
+          "image": "assets/images/research/targeted-vt-ratio.jpg",
+          "imageAlt": "Ratio of sensitive volume-time of the targeted search to the all-sky search versus false-alarm-rate threshold, staying above one",
+          "caption": "Sensitive volume–time of the targeted search relative to the all-sky search: the ratio stays above one at every false-alarm-rate threshold.",
+          "source": "Tsukada et al. 2026",
+          "sourceHref": "https://arxiv.org/abs/2606.22266"
+        },
+        {
+          "title": "Low-latency detection pipeline",
+          "period": "2023–present",
+          "place": "",
+          "body": "<p>GstLAL is one of the LVK’s real-time matched-filtering pipelines that issue public alerts within seconds of a merger, and it made the first low-latency detection of GW170817. I worked on its readiness for O4, including the template bank used throughout the run, and on event follow-up during observing runs. I am now part of the team building its successor, SGNL, which reimplements GstLAL’s matched filtering in a lightweight Python streaming framework with GPU acceleration and cuts the median alert latency roughly in half.</p>",
+          "papers": [
+            {
+              "label": "Huang et al., SGNL: Scalable Low-Latency Gravitational Wave Detection Pipeline, arXiv:2511.04730 (2025)",
+              "href": "https://arxiv.org/abs/2511.04730"
+            },
+            {
+              "label": "Ewing et al., Performance of the low-latency GstLAL search towards O4, PRD 109, 042008 (2024)",
+              "href": "https://arxiv.org/abs/2305.05625"
+            },
+            {
+              "label": "Sakon at al., Template bank for compact binary mergers in the LVK fourth observing run, PRD 109, 044066 (2024)",
+              "href": "https://arxiv.org/abs/2211.16674"
+            }
+          ],
+          "image": "assets/images/screenshot-202026-11-08-20at-2011-49-28.png",
+          "imageAlt": "Histograms of GraceDB reporting latencies. The blue histogram shows latencies for the GstLAL analysis, while the orange histogram shows latencies for the SGNL analysis.",
+          "caption": "Histograms of GraceDB reporting latencies. The\nblue histogram shows latencies for the GstLAL analysis, while\nthe orange histogram shows latencies for the SGNL analysis.",
+          "source": "Huang et al. 2025",
+          "sourceHref": "https://arxiv.org/abs/2511.04730"
+        },
+        {
+          "title": "Statistical processing of gravitational-wave detections",
+          "period": "2016–present",
+          "place": "",
+          "body": "<p>I am one of the core developers of the GstLAL and SGNL pipelines, specializing in their statistical post-processing. Ahead of O4, I led upgrades to GstLAL’s ranking statistic: removing signal contamination from the background, adding the bank-ξ² statistic, upgrading the ρ–ξ² signal model and integrating KAGRA. Together these improved the pipeline’s sensitivity by roughly 15–20%.</p>",
+          "papers": [
+            {
+              "label": "Tsukada et al., Improved ranking statistics of the GstLAL inspiral search, PRD 108, 043004 (2023)",
+              "href": "https://arxiv.org/abs/2305.06286"
+            },
+            {
+              "label": "Joshi, Tsukada & Hanna, Removing signal contamination in GstLAL, PRD 108, 084032 (2023)",
+              "href": "https://doi.org/10.1103/PhysRevD.108.084032"
+            },
+            {
+              "label": "Hanna et al., Fast evaluation of multidetector consistency, PRD 101, 022003 (2020)",
+              "href": "https://arxiv.org/abs/1901.02227"
+            }
+          ],
+          "image": "assets/images/screenshot-202026-11-08-20at-2011-13-07.png",
+          "imageAlt": "Ratio of the pipeline sensitivity measured by the run with the upgraded signal model to that with the original signal model as a function of false alarm rate (FAR).",
+          "caption": "Ratio of the pipeline sensitivity measured by the run with the\nupgraded signal model to that with the original signal model\nas a function of false alarm rate (FAR).",
+          "source": "Tsukada et al. 2023",
+          "sourceHref": "https://arxiv.org/abs/2305.06286"
+        },
+        {
+          "title": "Anisotropic stochastic backgrounds",
+          "period": "2018–present",
+          "place": "",
+          "body": "<p>The combined hum of countless unresolved sources forms a stochastic gravitational-wave background, whose brightness may vary across the sky and trace structures such as the Galactic plane. I developed a Bayesian framework that infers the physical parameters of a targeted anisotropic background and chooses the angular resolution from the data itself. I applied it to O3 data to search for millisecond pulsars and extended it to test non-tensorial polarizations beyond general relativity. I co-chair the LVK's anisotropic stochastic-background working group.</p>",
+          "papers": [
+            {
+              "label": "Tsukada et al., Bayesian parameter estimation for targeted anisotropic GW background, PRD 107, 023024 (2023)",
+              "href": "https://arxiv.org/abs/2208.14421"
+            },
+            {
+              "label": "Tsukada, Anisotropic backgrounds with non-tensorial polarizations, PRD 108, 124042 (2023)",
+              "href": "https://arxiv.org/abs/2308.09020"
+            },
+            {
+              "label": "LVK, Directional search for persistent gravitational waves in O4a (2025)",
+              "href": "https://arxiv.org/abs/2510.17487"
+            }
+          ],
+          "image": "assets/images/research/anisotropic-galactic-plane.jpg",
+          "imageAlt": "All-sky Mollweide map showing a bright band along the Galactic plane",
+          "caption": "A mock Galactic-plane distribution of background energy density across the sky, used to test the Bayesian search.",
+          "source": "Tsukada et al. 2023",
+          "sourceHref": "https://arxiv.org/abs/2208.14421"
+        },
+        {
+          "title": "Ultralight bosons",
+          "period": "2016–2021",
+          "place": "",
+          "body": "<p>Ultralight bosons, dark-matter candidates beyond the Standard Model, can extract spin from black holes through superradiance. The resulting clouds emit nearly monochromatic gravitational waves, and the signals from the whole black-hole population adds up to a stochastic background. My Ph.D. work modeled this background for scalar and vector bosons and searched Advanced LIGO data for it. Under optimistic black-hole spin assumptions, vector bosons with masses of 0.8–6.0 × 10⁻¹³ eV are excluded.</p>",
+          "papers": [
+            {
+              "label": "Tsukada et al., Stochastic GW background from ultralight vector bosons, PRD 103, 083005 (2021)",
+              "href": "https://arxiv.org/abs/2011.06995"
+            },
+            {
+              "label": "Tsukada et al., First search for a stochastic GW background from ultralight bosons, PRD 99, 103015 (2019)",
+              "href": "https://arxiv.org/abs/1812.09622"
+            }
+          ],
+          "image": "assets/images/research/boson-superradiance.jpg",
+          "imageAlt": "Diagram of a boson cloud growing around a spinning black hole and then radiating gravitational waves",
+          "caption": "A boson cloud grows around a spinning black hole through superradiance, then dissipates by emitting gravitational waves.",
+          "source": "Tsukada et al. 2021",
+          "sourceHref": "https://arxiv.org/abs/2011.06995"
+        }
+      ],
+      "headerImage": "assets/images/chatgpt-20image-202026-e5-b9-b49-e6-9c-8814-e6-97-a5-2021-41.png"
     },
     {
       "file": "page3.html",
@@ -410,5 +563,6 @@
       "heading": "Coming soon...",
       "message": "The Outreach page is under construction."
     }
-  ]
+  ],
+  "theme": {}
 }

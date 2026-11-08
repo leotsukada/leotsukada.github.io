@@ -13,6 +13,7 @@ import re
 from html import escape
 from html.parser import HTMLParser
 from pathlib import Path
+from urllib.parse import urlparse
 
 EDITOR_DIR = Path(__file__).resolve().parent
 ROOT = EDITOR_DIR.parent
@@ -147,6 +148,11 @@ def sanitize_content(content: dict) -> dict:
     for item in content["news"]["items"]:
         item["text"] = sanitize(item.get("text", ""))
     content["about"]["body"] = sanitize(content["about"].get("body", ""), block=True)
+    for page in content["pages"]:
+        if "intro" in page:
+            page["intro"] = sanitize(page["intro"], block=True)
+        for sec in page.get("sections", []):
+            sec["body"] = sanitize(sec.get("body", ""), block=True)
     return content
 
 
@@ -219,6 +225,31 @@ def a_attrs(href: str, new_tab: bool | None = None) -> str:
     return attrs
 
 
+GA_ID_RE = re.compile(r"G-[A-Z0-9]{4,20}")
+
+
+def analytics(s: dict) -> str:
+    """Google Analytics 4 tag. Only reports when served from the live site's host,
+    so the editor preview and local copies are not counted."""
+    ga_id = (s.get("gaMeasurementId") or "").strip().upper()
+    if not GA_ID_RE.fullmatch(ga_id):
+        return ""
+    host = urlparse(s["url"]).hostname or ""
+    return f"""  <script>
+    if (location.hostname === {json.dumps(host)}) {{
+      var ga = document.createElement("script");
+      ga.async = true;
+      ga.src = "https://www.googletagmanager.com/gtag/js?id={ga_id}";
+      document.head.appendChild(ga);
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function () {{ dataLayer.push(arguments); }};
+      gtag("js", new Date());
+      gtag("config", "{ga_id}");
+    }}
+  </script>
+"""
+
+
 def head(c: dict, title: str, description: str, path: str) -> str:
     s = c["site"]
     url = s["url"].rstrip("/") + "/"
@@ -249,7 +280,7 @@ def head(c: dict, title: str, description: str, path: str) -> str:
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Oswald:wght@300;400;500;600;700&display=swap">
   <link rel="stylesheet" href="assets/css/site.css">
-{theme_style(c)}  <script src="assets/js/site.js" defer></script>
+{theme_style(c)}{analytics(s)}  <script src="assets/js/site.js" defer></script>
 </head>
 <body>
 """
@@ -461,12 +492,107 @@ def render_index(c: dict) -> str:
 """ + footer(c)
 
 
+def slugify(text: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-") or "section"
+
+
+def research_section(sec: dict, slug: str) -> str:
+    meta = " · ".join(escape(x) for x in (sec.get("period"), sec.get("place")) if x)
+    meta = f'\n            <p class="research-item__meta">{meta}</p>' if meta else ""
+    body = sanitize(sec.get("body", ""), block=True).replace("</p><p>", "</p>\n            <p>")
+    papers = [p for p in sec.get("papers", []) if p.get("label")]
+    paper_list = ""
+    if papers:
+        items = "\n".join(
+            f'              <li><a {link_attrs(p["href"])}>{escape(p["label"])}</a></li>' if p.get("href")
+            else f'              <li>{escape(p["label"])}</li>'
+            for p in papers
+        )
+        paper_list = f"""
+            <div class="research-item__papers">
+              <h3>Key papers</h3>
+              <ul>
+{items}
+              </ul>
+            </div>"""
+    figure = ""
+    if sec.get("image"):
+        src = escape(sec["image"])
+        caption = escape(sec.get("caption", ""))
+        if sec.get("source"):
+            label = escape(sec["source"])
+            source = f'<a {link_attrs(sec["sourceHref"])}>{label}</a>' if sec.get("sourceHref") else label
+            caption += f'{" " if caption else ""}<span class="research-item__source">Figure: {source}</span>'
+        figure = f"""
+          <figure class="research-item__figure">
+            <a href="{src}" target="_blank" rel="noopener" aria-label="Open figure at full size">
+              <img src="{src}" alt="{escape(sec.get("imageAlt") or sec.get("caption", ""))}" loading="lazy" decoding="async">
+            </a>{f"{chr(10)}            <figcaption>{caption}</figcaption>" if caption else ""}
+          </figure>"""
+    return f"""
+    <section class="research-item{"" if figure else " research-item--text"}" id="{slug}" aria-labelledby="{slug}-title">
+      <div class="container research-item__grid">
+        <div class="research-item__text">{meta}
+          <h2 id="{slug}-title">{escape(sec.get("title", ""))}</h2>
+          <div class="research-item__body">
+            {body}
+          </div>{paper_list}
+        </div>{figure}
+      </div>
+    </section>
+"""
+
+
+def page_header_bg(page: dict) -> str:
+    """Inline background style for a sub page's header, or "" when no image is set."""
+    img = (page.get("headerImage") or "").strip()
+    if not img:
+        return ""
+    return (
+        ' style="background-image: linear-gradient(90deg, rgb(0 0 0 / .7), rgb(0 0 0 / .3) 75%), '
+        f"url('{escape(img)}')\""
+    )
+
+
+def render_research(c: dict, page: dict) -> str:
+    title = f'{page["title"]} — {c["site"]["author"]}'
+    sections = [s for s in page["sections"] if not s.get("hidden")]
+    slugs, seen = [], set()
+    for sec in sections:
+        slug = base = slugify(sec.get("title", ""))
+        n = 2
+        while slug in seen:
+            slug, n = f"{base}-{n}", n + 1
+        seen.add(slug)
+        slugs.append(slug)
+    intro = sanitize(page.get("intro", ""), block=True)
+    toc = "\n".join(
+        f'          <li><a href="#{slug}">{escape(sec.get("title", ""))}</a></li>'
+        for sec, slug in zip(sections, slugs)
+    )
+    return head(c, title, page.get("description") or title, page["file"]) + nav(c, page["file"]) + f"""
+  <main id="main">
+    <section class="page-hero{" page-hero--image" if page_header_bg(page) else ""}"{page_header_bg(page)}>
+      <div class="container">
+        <h1 class="page-hero__title">{escape(page["heading"])}</h1>
+        <div class="page-hero__intro">{intro}</div>
+        <ul class="research-toc" aria-label="Research topics">
+{toc}
+        </ul>
+      </div>
+    </section>
+{"".join(research_section(sec, slug) for sec, slug in zip(sections, slugs))}  </main>
+""" + footer(c)
+
+
 def render_subpage(c: dict, page: dict) -> str:
+    if any(not s.get("hidden") for s in page.get("sections", [])):
+        return render_research(c, page)
     title = f'{page["title"]} — {c["site"]["author"]}'
     message = f'\n        <p>{escape(page["message"])}</p>' if page.get("message") else ""
     return head(c, title, page.get("description") or title, page["file"]) + nav(c, page["file"]) + f"""
   <main id="main">
-    <section class="coming-soon">
+    <section class="coming-soon{" coming-soon--image" if page_header_bg(page) else ""}"{page_header_bg(page)}>
       <div>
         <h1>{escape(page["heading"])}</h1>{message}
         <a class="btn btn--light" href="index.html">Back to Home</a>
